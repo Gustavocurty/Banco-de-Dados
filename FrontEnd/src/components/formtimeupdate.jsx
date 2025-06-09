@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-export default function FormTimes() {
+export default function FormTimeUpdate() {
     const navigate = useNavigate();
     const { id } = useParams();
     const [formData, setFormData] = useState({
@@ -38,9 +38,9 @@ export default function FormTimes() {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center w-[80%] bg-blue-400 p-8 rounded-lg shadow-lg mt-10">
+        <div className="flex flex-col items-center justify-center w-lg bg-blue-400 p-8 rounded-lg shadow-lg mt-30">
             <h1 className="text-3xl text-white font-bold mb-6">Atualizar Time</h1>
-            <form action="POST" method="POST" className="w-full max-w-md">
+            <form className="w-full max-w-md">
                 <div className="mb-4">
                     <label className="block text-white text-sm font-bold mb-2" htmlFor="name">
                         Nome do Time
@@ -51,7 +51,7 @@ export default function FormTimes() {
                         name="name"
                         placeholder="Digite o nome do time"
                         required
-                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 bg-white leading-tight focus:outline-none focus:shadow-outline"
+                        className="shadow border-none appearance-none border rounded w-full py-2 px-3 text-gray-700 bg-white leading-tight focus:outline-none focus:shadow-outline"
                         value={formData.name}
                         onChange={handleChange}
                     />
@@ -66,7 +66,7 @@ export default function FormTimes() {
                         placeholder="Digite o país do time"
                         name="country"
                         required
-                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 bg-white leading-tight focus:outline-none focus:shadow-outline"
+                        className="shadow border-none appearance-none border rounded w-full py-2 px-3 text-gray-700 bg-white leading-tight focus:outline-none focus:shadow-outline"
                         value={formData.country}
                         onChange={handleChange}
                     />
@@ -80,27 +80,34 @@ export default function FormTimes() {
                         id="foundation"
                         name="foundation"
                         required
-                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 bg-white leading-tight focus:outline-none focus:shadow-outline"
+                        className="shadow border-none appearance-none border rounded w-full py-2 px-3 text-gray-700 bg-white leading-tight focus:outline-none focus:shadow-outline"
                         value={formData.foundation}
                         onChange={handleChange}
                     />
                 </div>
-                <button
-                    type="submit"
-                    className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-300"
-                    onClick={
-                        async (e) => {
-                            e.preventDefault();
-                            await fetch(`http://localhost:3333/team/${id}`, {
-                                method: 'PUT',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(formData)
-                            });
-                            navigate('/times');
-                        }
-                    }>
-                    Atualizar Time
-                </button>
+                <div className="flex items-center justify-between">
+                    <button
+                        type="submit"
+                        className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-300"
+                        onClick={
+                            async (e) => {
+                                e.preventDefault();
+                                await fetch(`http://localhost:3333/team/${id}`, {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify(formData)
+                                });
+                                //espera 1 segundo para garantir que a atualização foi concluída
+                                navigate('/times');
+                            }
+                        }>
+                        Atualizar Time
+                    </button>
+
+                    <button type="submit" className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-300 cursor-pointer" onClick={() => navigate('/times')}>
+                            Voltar
+                    </button>
+                </div>
             </form>
         </div>
     );
