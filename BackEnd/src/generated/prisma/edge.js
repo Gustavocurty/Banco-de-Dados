@@ -181,7 +181,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "C:\\Users\\gusta\\OneDrive\\Desktop\\faculdade\\Banco de Dados\\trabalho\\backend\\src\\generated\\prisma",
+      "value": "C:\\Users\\gusta\\OneDrive\\Área de Trabalho\\Faculdade\\Sistema de Banco de Dados\\trabalho\\BackEnd\\src\\generated\\prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -195,11 +195,11 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "C:\\Users\\gusta\\OneDrive\\Desktop\\faculdade\\Banco de Dados\\trabalho\\backend\\prisma\\schema.prisma",
+    "sourceFilePath": "C:\\Users\\gusta\\OneDrive\\Área de Trabalho\\Faculdade\\Sistema de Banco de Dados\\trabalho\\BackEnd\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": null,
+    "rootEnvPath": "../../../.env",
     "schemaEnvPath": "../../../.env"
   },
   "relativePath": "../../../prisma",
