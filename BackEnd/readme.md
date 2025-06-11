@@ -2,9 +2,7 @@
 
 Antes de qualquer configuração, é importante instalar as dependências do projeto. Execute o comando abaixo na raiz do projeto:
 
-    ```
     npm install
-    ```
 
 ## Instruções para Configuração do Banco de Dados
 
