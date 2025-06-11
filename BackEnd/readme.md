@@ -23,7 +23,7 @@ Antes de qualquer configuração, é importante instalar as dependências do pro
     mysql://root:minhasenha@localhost:3306/meubanco
     ```
 
-2. **Crie o arquivo `.env`** e adicione a seguinte linha, usando a string criada acima:
+2. **Crie o arquivo `.env`** na raiz do projeto e adicione a seguinte linha, usando a string criada acima:
 
     ```
     DATABASE_URL="mysql://root:minhasenha@localhost:3306/meubanco"
