@@ -7,17 +7,17 @@ export const teamController: FastifyPluginAsyncZod = async app => {
   const teamSchema = z.object({
     name: z.string(),
     country: z.string(),
-    foundation: z.string()
+    foundation: z.string().datetime()
   });
 
   const teamResponseSchema = z.object({
-    id: z.string(),
+    id: z.number(),
     name: z.string(),
     country: z.string(),
     foundation: z.string()
   });
 
-  // POST - Criar um time
+  // POST - Criar time
   app.post('/team', {
     schema: {
       body: teamSchema,
@@ -62,7 +62,34 @@ export const teamController: FastifyPluginAsyncZod = async app => {
     }
   });
 
-  // PUT - Atualizar um time
+  // GET - Buscar time por ID
+  app.get('/team/:id', {
+    schema: {
+      params: z.object({ id: z.string() }),
+      response: {
+        200: teamResponseSchema,
+        404: z.object({ error: z.string() }),
+        500: z.object({ error: z.string() })
+      }
+    }
+  }, async (request, reply) => {
+    const { id } = request.params;
+    try {
+      const team = await prisma.team.findUnique({
+        where: { id: Number(id) }
+      });
+      if (!team) {
+        reply.status(404).send({ error: 'Time não encontrado.' });
+        return;
+      }
+      reply.send(team);
+    } catch (error) {
+      console.error(error);
+      reply.status(500).send({ error: 'Erro ao buscar time.' });
+    }
+  });
+
+  // PUT - Atualizar time
   app.put('/team/:id', {
     schema: {
       params: z.object({ id: z.string() }),
@@ -78,7 +105,7 @@ export const teamController: FastifyPluginAsyncZod = async app => {
 
     try {
       const updatedTeam = await prisma.team.update({
-        where: { id },
+        where: { id: Number(id) },
         data: {
           name,
           country,
@@ -92,7 +119,7 @@ export const teamController: FastifyPluginAsyncZod = async app => {
     }
   });
 
-  // DELETE - Remover um time
+  // DELETE - Remover time
   app.delete('/team/:id', {
     schema: {
       params: z.object({ id: z.string() }),
@@ -105,7 +132,7 @@ export const teamController: FastifyPluginAsyncZod = async app => {
     const { id } = request.params;
 
     try {
-      await prisma.team.delete({ where: { id } });
+      await prisma.team.delete({ where: { id: Number(id) } });
       reply.send({ message: 'Time deletado com sucesso!' });
     } catch (error) {
       console.error(error);
