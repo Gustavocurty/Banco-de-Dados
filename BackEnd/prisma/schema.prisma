@@ -15,12 +15,12 @@ datasource db {
 }
 
 model Player {
-  id           String  @id @default(uuid())
+  id           Int     @id @default(autoincrement())
   name         String
   birthday     String  
   nationality  String
   position     String
-  teamId       String?   // FK opcional para Times
+  teamId       Int?    // FK opcional para Times
 
   time         Team? @relation(fields: [teamId], references: [id])
 
@@ -30,7 +30,7 @@ model Player {
 }
 
 model Team {
-  id          String     @id @default(uuid())
+  id          Int       @id @default(autoincrement())
   name        String
   country     String
   foundation  String
@@ -43,23 +43,23 @@ model Team {
 }
 
 model Estatistic {
-  id          String   @id @default(uuid())
-  playerId   String
-  teamId      String
+  id          Int      @id @default(autoincrement())
+  playerId    Int?
+  teamId      Int?
   goals       Int
   assists     Int
   matches     Int
 
-  jogador     Player @relation(fields: [playerId], references: [id])
-  time        Team      @relation(fields: [teamId], references: [id])
+  jogador     Player? @relation(fields: [playerId], references: [id])
+  time        Team? @relation(fields: [teamId], references: [id])
 }
 
 model Contract {
-  id          String   @id @default(uuid())
-  playerId    String
-  teamId      String
-  startDate   DateTime
-  endDate     DateTime
+  id          Int      @id @default(autoincrement())
+  playerId    Int
+  teamId      Int
+  startDate   String
+  endDate     String
 
   player      Player @relation(fields: [playerId], references: [id])
   team        Team @relation(fields: [teamId], references: [id])
