@@ -9,16 +9,16 @@ export const playerController: FastifyPluginAsyncZod = async app => {
         birthday: z.string(),
         nationality: z.string(),
         position: z.string(),
-        teamId: z.string().optional()
+        teamId: z.number().optional()
     });
 
     const playerResponseSchema = z.object({
-        id: z.string(),
+        id: z.number(),
         name: z.string(),
         birthday: z.string(),
         nationality: z.string(),
         position: z.string(),
-        teamId: z.string().nullable()
+        teamId: z.number().nullable()
     });
 
     // POST - Criar player
@@ -68,6 +68,33 @@ export const playerController: FastifyPluginAsyncZod = async app => {
         }
     });
 
+    // GET - Buscar player por ID
+    app.get('/player/:id', {
+        schema: {
+            params: z.object({ id: z.string() }),
+            response: {
+                200: playerResponseSchema,
+                404: z.object({ error: z.string() }),
+                500: z.object({ error: z.string() })
+            }
+        }
+    }, async (request, reply) => {
+        const { id } = request.params;
+        try {
+            const player = await prisma.player.findUnique({
+                where: { id: Number(id) }
+            });
+            if (!player) {
+                reply.status(404).send({ error: 'Jogador não encontrado.' });
+                return;
+            }
+            reply.send(player);
+        } catch (error) {
+            console.error(error);
+            reply.status(500).send({ error: 'Erro ao buscar jogador.' });
+        }
+    });
+
     // PUT - Atualizar player
     app.put('/player/:id', {
         schema: {
@@ -84,7 +111,7 @@ export const playerController: FastifyPluginAsyncZod = async app => {
 
         try {
             const updatedPlayer = await prisma.player.update({
-                where: { id },
+                where: { id: Number(id) },
                 data: {
                     name,
                     birthday,
@@ -113,7 +140,7 @@ export const playerController: FastifyPluginAsyncZod = async app => {
         const { id } = request.params;
 
         try {
-            await prisma.player.delete({ where: { id } });
+            await prisma.player.delete({ where: { id: Number(id) } });
             reply.send({ message: 'Jogador deletado com sucesso!' });
         } catch (error) {
             console.error(error);

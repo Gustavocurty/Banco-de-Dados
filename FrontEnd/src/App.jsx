@@ -1,17 +1,20 @@
 import Nav from './components/nav'
 import Home from './pages/home'
 import Jogadores from './pages/jogadores'
-import { Routes, Route } from "react-router";
-import Times from './pages/time';
-import Estatisticas from './pages/estatistica';
-import Contratos from './pages/contratos';
-import FormTimesCreate from './components/formtimecreate';
-import FormTimesUpdate from './components/formtimeupdate';
-import FormJogadoresCreate from './components/formjogadorcreate';
-import FormJogadoresUpdate from './components/formjogadorupdate';
+import Times from './pages/time'
+import Estatisticas from './pages/estatisticas'
+import Contratos from './pages/contratos'
+import FormTimesCreate from './components/formtimecreate'
+import FormTimesUpdate from './components/formtimeupdate'
+import FormJogadoresCreate from './components/formjogadorcreate'
+import FormJogadoresUpdate from './components/formjogadorupdate'
+import FormEstatisticaCreate from './components/formestatisticacreate'
+import FormEstatisticaUpdate from './components/formestatisticaupdate'
+import FormContratoCreate from './components/formcontratocreate'
+import FormContratoUpdate from './components/formcontratoupdate'
+import { Routes, Route } from "react-router-dom"
 
 function App() {
-
   return (
     <div className="flex flex-col min-h-screen bg-white items-center">
       <Nav />
@@ -25,11 +28,14 @@ function App() {
         <Route path="/times" element={<Times />} />
         <Route path="/times/criar" element={<FormTimesCreate />} />
         <Route path="/times/editar/:id" element={<FormTimesUpdate />} />
-        
+
         <Route path="/estatisticas" element={<Estatisticas />} />
-        
+        <Route path="/estatisticas/criar" element={<FormEstatisticaCreate />} />
+        <Route path="/estatisticas/editar/:id" element={<FormEstatisticaUpdate />} />
+
         <Route path="/contratos" element={<Contratos />} />
-        
+        <Route path="/contratos/criar" element={<FormContratoCreate />} />
+        <Route path="/contratos/editar/:id" element={<FormContratoUpdate />} />
 
       </Routes>
     </div>
