@@ -156,7 +156,7 @@ export default function Estatisticas() {
                   <input
                     type="number"
                     value={searchMatches}
-                    placeholder="Partidas"
+                    placeholder="Partida 🔎s"
                     onChange={(e) => setSearchMatches(e.target.value)}
                     className="bg-white rounded-lg w-25 text-black placeholder-black py-1 px-2 text-center"
                   />
@@ -168,9 +168,9 @@ export default function Estatisticas() {
                   <input
                     type="number"
                     value={searchGoals}
-                    placeholder="Gols"
+                    placeholder="Gols 🔎"
                     onChange={(e) => setSearchGoals(e.target.value)}
-                    className="bg-white rounded-lg w-25 text-black placeholder-black py-1 px-2 text-center"
+                    className="bg-white rounded-lg w-25 text-black flex placeholder-black py-1 px-2 text-center"
                   />
                 </div>
               </th>
@@ -180,7 +180,7 @@ export default function Estatisticas() {
                   <input
                     type="number"
                     value={searchAssists}
-                    placeholder="Assistências"
+                    placeholder="Assistências 🔎"
                     onChange={(e) => setSearchAssists(e.target.value)}
                     className="bg-white rounded-lg w-35 text-black placeholder-black py-1 px-2 text-center"
                   />
