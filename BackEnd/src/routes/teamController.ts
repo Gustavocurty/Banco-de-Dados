@@ -48,7 +48,9 @@ export const teamController: FastifyPluginAsyncZod = async app => {
   app.get('/team', {
     schema: {
       querystring: z.object({
-        q: z.string().optional()
+        q: z.string().optional(),
+        country: z.string().optional(),
+        foundation: z.string().optional()
       }),
       response: {
         200: z.array(teamResponseSchema),
@@ -56,17 +58,32 @@ export const teamController: FastifyPluginAsyncZod = async app => {
       }
     }
   }, async (request, reply) => {
-    const { q } = request.query;
-    console.log('Query time:', q);
+    const { q, country, foundation } = request.query as {
+      q?: string,
+      country?: string,
+      foundation?: string
+    };
+    console.log('Query time:', q, country, foundation);
 
     try {
       const teams = await prisma.team.findMany({
-        where: q ? {
-          name: {
-            contains: q,
-          }
-        } 
-        : undefined,
+        where: {
+          ...(q && {
+            name: {
+              contains: q,
+            }
+          }),
+          ...(country && {
+            country: {
+              contains: country,
+            }
+          }),
+          ...(foundation && {
+            foundation: {
+              contains: foundation
+            }
+          })
+        },
         orderBy: {
           name: 'asc'
         }

@@ -57,12 +57,20 @@ export const contractController: FastifyPluginAsyncZod = async (app) => {
   );
 
   // GET - Listar contratos
-  app.get(
-    "/contract",
+  app.get("/contract",
     {
       schema: {
         querystring: z.object({
-          q: z.string().optional(),
+          playerId: z.preprocess(
+            (val) => (val === undefined ? undefined : Number(val)),
+            z.number().optional()
+          ),
+          teamId: z.preprocess(
+            (val) => (val === undefined ? undefined : Number(val)),
+            z.number().optional()
+          ),
+          startDate: z.string().optional(),
+          endDate: z.string().optional(),
         }),
         response: {
           200: z.array(contractResponseSchema),
@@ -71,23 +79,21 @@ export const contractController: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request, reply) => {
-      const { q } = request.query;
-      console.log("Query contratos:", q);
+      const { playerId, teamId, startDate, endDate } = request.query as {
+        playerId?: number;
+        teamId?: number;
+        startDate?: string;
+        endDate?: string;
+      };
       try {
-        const contracts = await prisma.contract.findMany();
-        
-      // try {
-      //     const contracts = await prisma.contract.findMany({
-      //       where: q ? {
-      //         name: {
-      //           contains: q,
-      //         }
-      //       }
-      //         : undefined,
-      //       orderBy: {
-      //         name: 'asc' // ordena por nome
-      //       }
-      //     });
+        const contracts = await prisma.contract.findMany({
+          where: {
+            ...(playerId && { playerId: { equals: playerId } }),
+            ...(teamId && { teamId: { equals: teamId } }),
+            ...(startDate && { startDate: { contains: startDate } }),
+            ...(endDate && { endDate: { contains: endDate } }),
+          },
+        });
 
         reply.send(
           contracts.map((contract) => ({

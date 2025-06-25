@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit, faTrash, faAdd } from "@fortawesome/free-solid-svg-icons";
+import { Search } from 'lucide-react';
 
 export default function Times() {
   const [times, setTimes] = useState([]);
   const [search, setSearch] = useState("");
   const [timeSelecionado, setTimeSelecionado] = useState(null);
+  const [searchTime, setSearchTime] = useState("");
+  const [searchPais, setSearchPais] = useState("");
+  const [searchFundacao, setSearchFundacao] = useState("");
 
   useEffect(() => {
     const fetchTimes = async () => {
@@ -60,19 +64,39 @@ export default function Times() {
       fetchJogadores();
     }, [search]);
 
+    useEffect(() => {
+      // Se todos os filtros estiverem vazios, limpa o filtro
+      if (
+        searchTime.trim() === "" &&
+        searchPais.trim() === "" &&
+        searchFundacao.trim() === ""
+      ) {
+        setTimeSelecionado([]);
+        return;
+      }
+  
+      const params = new URLSearchParams();
+      if (searchTime.trim() !== "") params.append("q", searchTime);
+      if (searchPais.trim() !== "") params.append("country", searchPais);
+      if (searchFundacao.trim() !== "") params.append("foundation", searchFundacao);
+  
+      const fetchTimes = async () => {
+        try {
+          const res = await fetch(`http://localhost:3333/team?${params.toString()}`);
+          const data = await res.json();
+          setTimeSelecionado(data);
+        } catch (error) {
+          console.error("Erro ao buscar os times:", error);
+        }
+      };
+  
+      fetchTimes();
+    }, [searchTime, searchPais, searchFundacao]);
+
   return (
-    <div className="flex flex-col items-center justify-center w-[80%] bg-blue-400 p-8 rounded-lg shadow-lg mt-30">
+    <div className="flex flex-col items-center justify-center w-[95%] bg-blue-400 p-8 rounded-lg shadow-lg mt-30">
       <div className="flex justify-between items-center w-full mb-5">
         <h1 className="text-3xl text-white font-bold">TIMES</h1>
-
-        <div className="flex items-center">
-          <input 
-            type="text"
-            value={search} 
-            placeholder="Pesquisar Time"
-            onChange={(e) => setSearch(e.target.value)}
-            className="bg-white rounded-lg w-50 mr-2 text-black placeholder-black py-1 px-3 focus:outline-none focus:shadow-outline"
-          />
           <a
             href="/times/criar"
             className="bg-white text-black px-4 py-2 rounded hover:bg-green-500 hover:text-white transition-colors duration-300 cursor-pointer flex items-center gap-2"
@@ -80,21 +104,52 @@ export default function Times() {
             <FontAwesomeIcon icon={faAdd} />
             <p className="font-bold">Adicionar Time</p>
           </a>
-        </div>
       </div>
 
       <div className="overflow-x-auto w-full">
         <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
           <thead>
             <tr className="bg-gray-200 text-gray-700 uppercase text-sm leading-normal">
-              <th className="py-3 px-6 text-left whitespace-nowrap">Nome</th>
-              <th className="py-3 px-6 text-left whitespace-nowrap">País</th>
-              <th className="py-3 px-6 text-left whitespace-nowrap">Fundação</th>
+              <th className="py-3 px-6 text-left whitespace-nowrap">
+                <div>
+                  <p className="w-50 text-center mb-1">Nome</p>
+                  <input 
+                    type="text"
+                    value={searchTime} 
+                    placeholder="Pesquisar Time 🔎"
+                    onChange={(e) => setSearchTime(e.target.value)}
+                    className="bg-white rounded-lg w-50 text-black placeholder-black text-center py-1 focus:outline-none focus:shadow-outline"
+                  /> 
+                </div>
+              </th>
+              <th className="py-3 px-6 text-left whitespace-nowrap">
+                <div>
+                  <p className="w-50 text-center mb-1">País</p>
+                  <input 
+                    type="text"
+                    value={searchPais} 
+                    placeholder="Pesquisar País 🔎"
+                    onChange={(e) => setSearchPais(e.target.value)}
+                    className="bg-white rounded-lg w-50 text-black placeholder-black text-center py-1 focus:outline-none focus:shadow-outline"
+                  /> 
+                </div>
+              </th>
+              <th className="py-3 px-6 text-left whitespace-nowrap">
+                <div>
+                  <p className="w-full text-center mb-1">Fundação</p>
+                  <input 
+                    type="date"
+                    value={searchFundacao}
+                    onChange={(e) => setSearchFundacao(e.target.value)}
+                    className="bg-white rounded-lg w-full text-black placeholder-black flex justify-center py-1 focus:outline-none focus:shadow-outline"
+                  /> 
+                </div>
+              </th>
               <th className="py-3 px-6 text-right whitespace-nowrap">Ações</th>
             </tr>
           </thead>
           <tbody>
-            {(search ? timeSelecionado : times).map((time) => (
+            {(searchTime || searchPais || searchFundacao ? timeSelecionado : times).map((time) => (
                 <tr
                   key={time.id}
                   className="border-b text-black border-gray-200 hover:bg-gray-100"

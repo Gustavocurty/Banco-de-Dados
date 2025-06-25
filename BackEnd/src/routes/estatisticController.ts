@@ -46,14 +46,37 @@ export const estatisticController: FastifyPluginAsyncZod = async app => {
   // GET - Listar todas as estatísticas
   app.get('/estatistic', {
     schema: {
+      querystring: z.object({
+        playerId: z.preprocess((val) => val === undefined ? undefined : Number(val), z.number().optional()),
+        teamId: z.preprocess((val) => val === undefined ? undefined : Number(val), z.number().optional()),
+        goals: z.preprocess((val) => val === undefined ? undefined : Number(val), z.number().optional()),
+        assists: z.preprocess((val) => val === undefined ? undefined : Number(val), z.number().optional()),
+        matches: z.preprocess((val) => val === undefined ? undefined : Number(val), z.number().optional())
+      }).optional(),
       response: {
         200: z.array(estatisticResponseSchema),
         500: z.object({ error: z.string() })
       }
     }
-  }, async (_, reply) => {
+  }, async (request, reply) => {
+    const { playerId, teamId, goals, assists, matches } = (request.query ?? {}) as {
+      playerId?: number,
+      teamId?: number,
+      goals?: number,
+      assists?: number,
+      matches?: number
+    };
+
     try {
-      const estatistics = await prisma.estatistic.findMany();
+      const estatistics = await prisma.estatistic.findMany({
+        where: {
+          ...(playerId && { playerId: { equals: playerId } }),
+          ...(teamId && { teamId: { equals: teamId } }),
+          ...(goals && { goals: { equals: goals } }),
+          ...(assists && { assists: { equals: assists } }),
+          ...(matches && { matches: { equals: matches } })
+        }
+      });
       reply.send(estatistics);
     } catch (error) {
       console.error(error);

@@ -6,7 +6,10 @@ export default function Contratos() {
   const [contratos, setContratos] = useState([]);
   const [jogadores, setJogadores] = useState([]);
   const [times, setTimes] = useState([]);
-  const [search, setSearch] = useState("");
+  const [searchPlayer, setSearchPlayer] = useState("");
+  const [searchTeam, setSearchTeam] = useState("");
+  const [searchStart, setSearchStart] = useState("");
+  const [searchEnd, setSearchEnd] = useState("");
   const [contratosSelecionados, setContratosSelecionados] = useState([]);
 
   useEffect(() => {
@@ -58,19 +61,37 @@ export default function Contratos() {
     return team ? team.name : "Sem time";
   };
 
+  useEffect(() => {
+    if (!searchPlayer && !searchTeam && !searchStart && !searchEnd) {
+      setContratosSelecionados([]);
+      return;
+    }
+
+    const params = new URLSearchParams();
+    if (searchPlayer) params.append("playerId", searchPlayer);
+    if (searchTeam) params.append("teamId", searchTeam);
+    if (searchStart) params.append("startDate", searchStart);
+    if (searchEnd) params.append("endDate", searchEnd);
+
+    const fetchFiltrados = async () => {
+      try {
+        const res = await fetch(
+          `http://localhost:3333/contract?${params.toString()}`
+        );
+        const data = await res.json();
+        setContratosSelecionados(data);
+      } catch (error) {
+        console.error("Erro ao buscar contratos filtrados:", error);
+      }
+    };
+
+    fetchFiltrados();
+  }, [searchPlayer, searchTeam, searchStart, searchEnd]);
+
   return (
-    <div className="flex flex-col items-center justify-center w-[80%] bg-blue-400 p-8 rounded-lg shadow-lg mt-30">
+    <div className="flex flex-col items-center justify-center w-[95%] bg-blue-400 p-8 rounded-lg shadow-lg mt-30">
       <div className="flex justify-between items-center w-full mb-5">
         <h1 className="text-3xl text-white font-bold">CONTRATOS</h1>
-
-        <div className="flex items-center">
-          <input
-            type="text"
-            value={search}
-            placeholder="Pesquisar Jogador"
-            onChange={(e) => setSearch(e.target.value)}
-            className="bg-white rounded-lg w-50 mr-2 text-black placeholder-black py-1 px-3 focus:outline-none focus:shadow-outline"
-          />
           <a
             href="/contratos/criar"
             className="bg-white text-black px-4 py-2 rounded hover:bg-green-500 hover:text-white transition-colors duration-300 cursor-pointer flex items-center gap-2"
@@ -78,23 +99,72 @@ export default function Contratos() {
             <FontAwesomeIcon icon={faAdd} />
             <p className="font-bold">Adicionar Contrato</p>
           </a>
-        </div>
       </div>
 
       <div className="overflow-x-auto w-full">
         <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
           <thead>
             <tr className="bg-gray-200 text-gray-700 uppercase text-sm leading-normal">
-              <th className="py-3 px-6 text-left whitespace-nowrap">Jogador</th>
-              <th className="py-3 px-6 text-left whitespace-nowrap">Time</th>
-              <th className="py-3 px-6 text-left whitespace-nowrap">Início</th>
-              <th className="py-3 px-6 text-left whitespace-nowrap">Fim</th>
+              <th className="py-3 px-6 text-left whitespace-nowrap">
+                <div className="flex flex-col items-center">
+                  <p className="w-50 text-center mb-1">Jogador</p>
+                  <select
+                    value={searchPlayer}
+                    onChange={e => setSearchPlayer(e.target.value)}
+                    className="bg-white rounded-lg text-black py-1 px-2"
+                  >
+                  <option value="">Todos os Jogadores</option>
+                  {jogadores.map(j => (
+                    <option key={j.id} value={j.id}>{j.name}</option>
+                  ))}
+                </select>
+                </div>
+              </th>
+              <th className="py-3 px-6 text-left whitespace-nowrap">
+                <div className="flex flex-col items-center">
+                  <p className="w-50 text-center mb-1">Time</p>
+                  <select
+                    value={searchTeam}
+                    onChange={e => setSearchTeam(e.target.value)}
+                    className="bg-white rounded-lg text-black py-1 px-2"
+                  >
+                    <option value="">Todos os Times</option>
+                    {times.map(t => (
+                      <option key={t.id} value={t.id}>{t.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </th>
+              <th className="py-3 px-6 text-left whitespace-nowrap">
+                <div className="flex flex-col items-center">
+                  <p className="w-50 text-center mb-1">Início</p>
+                  <input
+                    type="date"
+                    value={searchStart}
+                    onChange={e => setSearchStart(e.target.value)}
+                    className="bg-white rounded-lg text-black py-1 px-2"
+                    placeholder="Início"
+                  />
+                </div>
+              </th>
+              <th className="py-3 px-6 text-left whitespace-nowrap">
+                <div className="flex flex-col items-center">
+                  <p className="w-50 text-center mb-1">Fim</p>
+                  <input
+                    type="date"
+                    value={searchEnd}
+                    onChange={e => setSearchEnd(e.target.value)}
+                    className="bg-white rounded-lg text-black py-1 px-2"
+                    placeholder="Fim"
+                  />
+                </div>
+              </th>
               <th className="py-3 px-6 text-right whitespace-nowrap">Ações</th>
             </tr>
           </thead>
           <tbody>
-            {contratos.length > 0 ? (
-              contratos.map((contrato) => (
+            {(searchPlayer || searchTeam || searchStart || searchEnd ? contratosSelecionados : contratos).length > 0 ? (
+              (searchPlayer || searchTeam || searchStart || searchEnd ? contratosSelecionados : contratos).map((contrato) => (
                 <tr
                   key={contrato.id}
                   className="border-b text-black border-gray-200 hover:bg-gray-100"

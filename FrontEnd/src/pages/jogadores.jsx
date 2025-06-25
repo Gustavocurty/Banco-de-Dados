@@ -118,9 +118,9 @@ export default function Player() {
                   <input 
                     type="text"
                     value={searchJogador} 
-                    placeholder="Pesquisar Jogador"
+                    placeholder="Pesquisar Jogador 🔎"
                     onChange={(e) => setSearchJogador(e.target.value)}
-                    className="bg-white rounded-lg w-50 text-black placeholder-gray-400 text-center py-1 focus:outline-none focus:shadow-outline"
+                    className="bg-white rounded-lg w-50 text-black placeholder-black text-center py-1 focus:outline-none focus:shadow-outline"
                   />  
                 </div>
               </th>
@@ -131,9 +131,9 @@ export default function Player() {
                   <input 
                     type="text"
                     value={searchNacionalidade} 
-                    placeholder="Pesquisar Nascionalidade"
+                    placeholder="Pesquisar Nascionalidade 🔎"
                     onChange={(e) => setSearchNacionalidade(e.target.value)}
-                    className="bg-white rounded-lg w-50 text-black placeholder-gray-400 text-center py-1 focus:outline-none focus:shadow-outline"
+                    className="bg-white rounded-lg w-50 text-black placeholder-black text-center py-1 focus:outline-none focus:shadow-outline"
                   />  
                 </div>
               </th>
@@ -143,10 +143,9 @@ export default function Player() {
                   <p className="w-full text-center mb-1">Data de Nascimento</p>
                   <input 
                     type="date"
-                    placeholder="Pesquisar Data de Nascimento"
                     value={searchDataNascimento}
                     onChange={(e) => setSearchDataNascimento(e.target.value)}
-                    className="bg-white rounded-lg w-50 flex justify-center text-black placeholder-gray-400 text-center py-1 focus:outline-none focus:shadow-outline"
+                    className="bg-white rounded-lg w-50 flex justify-center text-black placeholder-black text-center py-1 focus:outline-none focus:shadow-outline"
                   />
 
                 </div>
@@ -158,9 +157,9 @@ export default function Player() {
                   <input 
                     type="text"
                     value={searchPosicao}
-                    placeholder="Pesquisar Posição"
+                    placeholder="Pesquisar Posição 🔎"
                     onChange={(e) => setSearchPosicao(e.target.value)}
-                    className="bg-white rounded-lg w-50 text-black placeholder-gray-400 text-center py-1 focus:outline-none focus:shadow-outline"
+                    className="bg-white rounded-lg w-50 text-black placeholder-black text-center py-1 focus:outline-none focus:shadow-outline"
                   />
                 </div>
               </th>
@@ -171,7 +170,7 @@ export default function Player() {
                   <select
                     value={searchTime}
                     onChange={e => setSearchTime(e.target.value)}
-                    className="bg-white rounded-lg w-50 text-black placeholder-gray-400 text-center py-1 focus:outline-none focus:shadow-outline"
+                    className="bg-white rounded-lg w-50 text-black placeholder-black text-center py-1 focus:outline-none focus:shadow-outline"
                   >
                     <option value="">Todos</option>
                     {times.map(time => (
