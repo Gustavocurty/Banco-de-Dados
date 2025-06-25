@@ -22,9 +22,9 @@ app.register(playerController)
 app.register(teamController)
 
 app.get('/', async () => {
-  return 'Meu BD po..'
+  return 'Meu Banco de dados po..'
 })
 
 app.listen({ port: 3333 }).then(() => {
-  console.log('🚀 Servidor HTTP rodando em http://localhost:3333')
+  console.log('Servidor HTTP rodando em http://localhost:3333')
 })

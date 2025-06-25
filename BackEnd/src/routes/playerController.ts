@@ -53,14 +53,30 @@ export const playerController: FastifyPluginAsyncZod = async app => {
     // GET - Listar todos os players
     app.get('/player', {
         schema: {
+            querystring: z.object({
+                q: z.string().optional()
+            }),
             response: {
                 200: z.array(playerResponseSchema),
                 500: z.object({ error: z.string() })
             }
         }
-    }, async (_, reply) => {
+    }, async (request, reply) => {
+        const { q } = request.query as { q?: string };
+        console.log('Query jogador:', q);
+
         try {
-            const players = await prisma.player.findMany();
+            const players = await prisma.player.findMany({
+                where: q ? {
+                    name: {
+                        contains: q,
+                    }
+                }
+                : undefined,
+                orderBy: {
+                    name: 'asc' // ordena por nome
+                }
+            })
             reply.send(players);
         } catch (error) {
             console.error(error);

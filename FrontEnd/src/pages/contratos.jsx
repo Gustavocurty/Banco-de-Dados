@@ -6,6 +6,8 @@ export default function Contratos() {
   const [contratos, setContratos] = useState([]);
   const [jogadores, setJogadores] = useState([]);
   const [times, setTimes] = useState([]);
+  const [search, setSearch] = useState("");
+  const [contratosSelecionados, setContratosSelecionados] = useState([]);
 
   useEffect(() => {
     const fetchContratos = async () => {
@@ -60,13 +62,23 @@ export default function Contratos() {
     <div className="flex flex-col items-center justify-center w-[80%] bg-blue-400 p-8 rounded-lg shadow-lg mt-30">
       <div className="flex justify-between items-center w-full mb-5">
         <h1 className="text-3xl text-white font-bold">CONTRATOS</h1>
-        <a
-          href="/contratos/criar"
-          className="bg-white text-black px-4 py-2 rounded hover:bg-green-500 hover:text-white transition-colors duration-300 cursor-pointer flex items-center gap-2"
-        >
-          <FontAwesomeIcon icon={faAdd} />
-          <p className="font-bold">Adicionar Contrato</p>
-        </a>
+
+        <div className="flex items-center">
+          <input
+            type="text"
+            value={search}
+            placeholder="Pesquisar Jogador"
+            onChange={(e) => setSearch(e.target.value)}
+            className="bg-white rounded-lg w-50 mr-2 text-black placeholder-black py-1 px-3 focus:outline-none focus:shadow-outline"
+          />
+          <a
+            href="/contratos/criar"
+            className="bg-white text-black px-4 py-2 rounded hover:bg-green-500 hover:text-white transition-colors duration-300 cursor-pointer flex items-center gap-2"
+          >
+            <FontAwesomeIcon icon={faAdd} />
+            <p className="font-bold">Adicionar Contrato</p>
+          </a>
+        </div>
       </div>
 
       <div className="overflow-x-auto w-full">
@@ -107,7 +119,8 @@ export default function Contratos() {
                           !window.confirm(
                             "Tem certeza que deseja excluir este contrato?"
                           )
-                        ) return;
+                        )
+                          return;
                         try {
                           const response = await fetch(
                             `http://localhost:3333/contract/${contrato.id}`,

@@ -47,14 +47,30 @@ export const teamController: FastifyPluginAsyncZod = async app => {
   // GET - Listar todos os times
   app.get('/team', {
     schema: {
+      querystring: z.object({
+        q: z.string().optional()
+      }),
       response: {
         200: z.array(teamResponseSchema),
         500: z.object({ error: z.string() })
       }
     }
-  }, async (_, reply) => {
+  }, async (request, reply) => {
+    const { q } = request.query;
+    console.log('Query time:', q);
+
     try {
-      const teams = await prisma.team.findMany();
+      const teams = await prisma.team.findMany({
+        where: q ? {
+          name: {
+            contains: q,
+          }
+        } 
+        : undefined,
+        orderBy: {
+          name: 'asc'
+        }
+      });
       reply.send(teams);
     } catch (error) {
       console.error(error);

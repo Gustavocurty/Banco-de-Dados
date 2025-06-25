@@ -5,6 +5,8 @@ import { faEdit, faTrash, faAdd } from "@fortawesome/free-solid-svg-icons";
 export default function Player() {
   const [jogadores, setJogadores] = useState([]);
   const [times, setTimes] = useState([]);
+  const [JogadoresSelecionados, setJogadoresSelecionados] = useState([]);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     const fetchJogadores = async () => {
@@ -55,18 +57,59 @@ export default function Player() {
       alert("Erro ao excluir o jogador");
     }
   };
+  
+  const RealizarBusca = () => {  // ver -----------------------------------------------------
+    if (jogadores.length == 0) {
+      alert("Não existe nenhum jogador cadastrado.");
+      return;
+    }else if(search.trim() === "") {
+      alert("Por favor, insira um termo de busca.");
+    } else {
+      alert("Realizando busca por: " + search);
+    }
+  }
+
+  // Pesquisa
+  useEffect(() => {
+    if (search.trim() === "") {
+      setJogadoresSelecionados([]); // Limpa os resultados se a busca estiver vazia
+      return;
+    }
+
+    const fetchJogadores = async () => {
+      try {
+        const res = await fetch(`http://localhost:3333/player?q=${encodeURIComponent(search)}`);
+        const data = await res.json();
+        setJogadoresSelecionados(data);
+      } catch (error) {
+        console.error("Erro ao buscar os jogadores:", error);
+      }
+    };
+
+    fetchJogadores();
+  }, [search]);
+
 
   return (
     <div className="flex flex-col items-center justify-center w-[80%] bg-blue-400 p-8 rounded-lg shadow-lg mt-30">
       <div className="flex justify-between items-center w-full mb-5">
         <h1 className="text-3xl text-white font-bold">JOGADORES</h1>
-        <a
-          href="/jogadores/criar"
-          className="bg-white text-black px-4 py-2 rounded hover:bg-green-500 hover:text-white transition-colors duration-300 cursor-pointer flex items-center gap-2"
-        >
-          <FontAwesomeIcon icon={faAdd} />
-          <p className="font-bold">Adicionar Jogador</p>
-        </a>
+        <div className="flex items-center">
+          <input 
+            type="text"
+            value={search} 
+            placeholder="Pesquisar Jogador"
+            onChange={(e) => setSearch(e.target.value)}
+            className="bg-white rounded-lg w-50 mr-2 text-black placeholder-black py-1 px-3 focus:outline-none focus:shadow-outline"
+          />
+          <a
+            href="/jogadores/criar"
+            className="bg-white text-black px-4 py-2 ml-3 rounded hover:bg-green-500 hover:text-white transition-colors duration-300 cursor-pointer flex items-center gap-2"
+          >
+            <FontAwesomeIcon icon={faAdd} />
+            <p className="font-bold">Adicionar Jogador</p>
+          </a>
+        </div>
       </div>
 
       <div className="overflow-x-auto w-full">
@@ -82,8 +125,7 @@ export default function Player() {
             </tr>
           </thead>
           <tbody>
-            {jogadores.length > 0 ? (
-              jogadores.map((jogador) => (
+            {(search ? JogadoresSelecionados : jogadores).map((jogador) => (
                 <tr
                   key={jogador.id}
                   className="border-b text-black border-gray-200 hover:bg-gray-100"
@@ -110,14 +152,7 @@ export default function Player() {
                     </a>
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="7" className="py-3 px-6 text-center text-gray-500">
-                  Nenhum jogador encontrado.
-                </td>
-              </tr>
-            )}
+              ))}
           </tbody>
         </table>
       </div>

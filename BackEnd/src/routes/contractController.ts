@@ -61,15 +61,33 @@ export const contractController: FastifyPluginAsyncZod = async (app) => {
     "/contract",
     {
       schema: {
+        querystring: z.object({
+          q: z.string().optional(),
+        }),
         response: {
           200: z.array(contractResponseSchema),
           500: z.object({ error: z.string() }),
         },
       },
     },
-    async (_, reply) => {
+    async (request, reply) => {
+      const { q } = request.query;
+      console.log("Query contratos:", q);
       try {
         const contracts = await prisma.contract.findMany();
+        
+      // try {
+      //     const contracts = await prisma.contract.findMany({
+      //       where: q ? {
+      //         name: {
+      //           contains: q,
+      //         }
+      //       }
+      //         : undefined,
+      //       orderBy: {
+      //         name: 'asc' // ordena por nome
+      //       }
+      //     });
 
         reply.send(
           contracts.map((contract) => ({
