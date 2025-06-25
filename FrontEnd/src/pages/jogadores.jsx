@@ -6,7 +6,11 @@ export default function Player() {
   const [jogadores, setJogadores] = useState([]);
   const [times, setTimes] = useState([]);
   const [JogadoresSelecionados, setJogadoresSelecionados] = useState([]);
-  const [search, setSearch] = useState("");
+  const [searchJogador, setSearchJogador] = useState("");
+  const [searchNacionalidade, setSearchNacionalidade] = useState("");
+  const [searchDataNascimento, setSearchDataNascimento] = useState("");
+  const [searchPosicao, setSearchPosicao] = useState("");
+  const [searchTime, setSearchTime] = useState("");
 
   useEffect(() => {
     const fetchJogadores = async () => {
@@ -57,28 +61,29 @@ export default function Player() {
       alert("Erro ao excluir o jogador");
     }
   };
-  
-  const RealizarBusca = () => {  // ver -----------------------------------------------------
-    if (jogadores.length == 0) {
-      alert("Não existe nenhum jogador cadastrado.");
-      return;
-    }else if(search.trim() === "") {
-      alert("Por favor, insira um termo de busca.");
-    } else {
-      alert("Realizando busca por: " + search);
-    }
-  }
 
-  // Pesquisa
   useEffect(() => {
-    if (search.trim() === "") {
-      setJogadoresSelecionados([]); // Limpa os resultados se a busca estiver vazia
+    if (
+      searchJogador.trim() === "" &&
+      searchNacionalidade.trim() === "" &&
+      searchDataNascimento.trim() === "" &&
+      searchPosicao.trim() === "" &&
+      searchTime === ""
+    ) {
+      setJogadoresSelecionados([]);
       return;
     }
+
+    const params = new URLSearchParams();
+    if (searchJogador.trim() !== "") params.append("q", searchJogador);
+    if (searchNacionalidade.trim() !== "") params.append("nationality", searchNacionalidade);
+    if (searchDataNascimento.trim() !== "") params.append("birthday", searchDataNascimento);
+    if (searchPosicao.trim() !== "") params.append("position", searchPosicao);
+    if (searchTime !== "") params.append("teamId", searchTime);
 
     const fetchJogadores = async () => {
       try {
-        const res = await fetch(`http://localhost:3333/player?q=${encodeURIComponent(search)}`);
+        const res = await fetch(`http://localhost:3333/player?${params.toString()}`);
         const data = await res.json();
         setJogadoresSelecionados(data);
       } catch (error) {
@@ -87,45 +92,100 @@ export default function Player() {
     };
 
     fetchJogadores();
-  }, [search]);
-
+  }, [searchJogador, searchNacionalidade, searchDataNascimento, searchPosicao, searchTime]);
 
   return (
-    <div className="flex flex-col items-center justify-center w-[80%] bg-blue-400 p-8 rounded-lg shadow-lg mt-30">
+    <div className="flex flex-col items-center justify-center w-[95%] bg-blue-400 p-8 rounded-lg shadow-lg mt-30">
       <div className="flex justify-between items-center w-full mb-5">
         <h1 className="text-3xl text-white font-bold">JOGADORES</h1>
-        <div className="flex items-center">
-          <input 
-            type="text"
-            value={search} 
-            placeholder="Pesquisar Jogador"
-            onChange={(e) => setSearch(e.target.value)}
-            className="bg-white rounded-lg w-50 mr-2 text-black placeholder-black py-1 px-3 focus:outline-none focus:shadow-outline"
-          />
-          <a
+        <a
             href="/jogadores/criar"
             className="bg-white text-black px-4 py-2 ml-3 rounded hover:bg-green-500 hover:text-white transition-colors duration-300 cursor-pointer flex items-center gap-2"
           >
             <FontAwesomeIcon icon={faAdd} />
             <p className="font-bold">Adicionar Jogador</p>
           </a>
-        </div>
       </div>
 
       <div className="overflow-x-auto w-full">
         <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
           <thead>
             <tr className="bg-gray-200 text-gray-700 uppercase text-sm leading-normal">
-              <th className="py-3 px-6 text-left whitespace-nowrap">Nome</th>
-              <th className="py-3 px-6 text-left whitespace-nowrap">Nacionalidade</th>
-              <th className="py-3 px-6 text-left whitespace-nowrap">Data de Nascimento</th>
-              <th className="py-3 px-6 text-left whitespace-nowrap">Posição</th>
-              <th className="py-3 px-6 text-left whitespace-nowrap">Time</th>
+
+              <th className="py-3 px-6 text-left whitespace-nowrap">
+                <div className="flex flex-col justify-center items-start">
+                  <p className="w-50 text-center mb-1">Nome</p>
+                  <input 
+                    type="text"
+                    value={searchJogador} 
+                    placeholder="Pesquisar Jogador"
+                    onChange={(e) => setSearchJogador(e.target.value)}
+                    className="bg-white rounded-lg w-50 text-black placeholder-gray-400 text-center py-1 focus:outline-none focus:shadow-outline"
+                  />  
+                </div>
+              </th>
+
+              <th className="py-3 px-6 text-left whitespace-nowrap">
+                <div className="flex flex-col justify-center items-start">
+                  <p className="w-50 text-center mb-1">Nacionalidade</p>
+                  <input 
+                    type="text"
+                    value={searchNacionalidade} 
+                    placeholder="Pesquisar Nascionalidade"
+                    onChange={(e) => setSearchNacionalidade(e.target.value)}
+                    className="bg-white rounded-lg w-50 text-black placeholder-gray-400 text-center py-1 focus:outline-none focus:shadow-outline"
+                  />  
+                </div>
+              </th>
+
+              <th className="py-3 px-6 text-left whitespace-nowrap">
+                <div className="flex flex-col justify-center items-start">
+                  <p className="w-full text-center mb-1">Data de Nascimento</p>
+                  <input 
+                    type="date"
+                    placeholder="Pesquisar Data de Nascimento"
+                    value={searchDataNascimento}
+                    onChange={(e) => setSearchDataNascimento(e.target.value)}
+                    className="bg-white rounded-lg w-50 flex justify-center text-black placeholder-gray-400 text-center py-1 focus:outline-none focus:shadow-outline"
+                  />
+
+                </div>
+              </th>
+
+              <th className="py-3 px-6 text-left whitespace-nowrap">
+                <div className="flex flex-col justify-center items-start">
+                  <p className="w-full text-center mb-1">Posição</p>
+                  <input 
+                    type="text"
+                    value={searchPosicao}
+                    placeholder="Pesquisar Posição"
+                    onChange={(e) => setSearchPosicao(e.target.value)}
+                    className="bg-white rounded-lg w-50 text-black placeholder-gray-400 text-center py-1 focus:outline-none focus:shadow-outline"
+                  />
+                </div>
+              </th>
+
+              <th className="py-3 px-6 text-left whitespace-nowrap">
+                <div className="flex flex-col justify-center items-start">
+                  <p className="w-full text-center mb-1">Time</p>
+                  <select
+                    value={searchTime}
+                    onChange={e => setSearchTime(e.target.value)}
+                    className="bg-white rounded-lg w-50 text-black placeholder-gray-400 text-center py-1 focus:outline-none focus:shadow-outline"
+                  >
+                    <option value="">Todos</option>
+                    {times.map(time => (
+                      <option key={time.id} value={time.id}>{time.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </th>
+
               <th className="py-3 px-6 text-right whitespace-nowrap">Ações</th>
             </tr>
           </thead>
           <tbody>
-            {(search ? JogadoresSelecionados : jogadores).map((jogador) => (
+            {(searchJogador || searchNacionalidade || searchDataNascimento || searchPosicao || searchTime ? JogadoresSelecionados : jogadores).map((jogador) => (
                 <tr
                   key={jogador.id}
                   className="border-b text-black border-gray-200 hover:bg-gray-100"

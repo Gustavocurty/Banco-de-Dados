@@ -54,7 +54,11 @@ export const playerController: FastifyPluginAsyncZod = async app => {
     app.get('/player', {
         schema: {
             querystring: z.object({
-                q: z.string().optional()
+                q: z.string().optional(),
+                nationality: z.string().optional(),
+                birthday: z.string().optional(),
+                position: z.string().optional(),
+                teamId: z.preprocess((val) => val === undefined ? undefined : Number(val), z.number().optional())
             }),
             response: {
                 200: z.array(playerResponseSchema),
@@ -62,21 +66,42 @@ export const playerController: FastifyPluginAsyncZod = async app => {
             }
         }
     }, async (request, reply) => {
-        const { q } = request.query as { q?: string };
-        console.log('Query jogador:', q);
+        const { q, nationality, birthday, position, teamId } = request.query as { q?: string, nationality?: string, birthday?: string, position?: string, teamId?: number };
+        console.log('Query jogador:', q, 'Nationality:', nationality);
 
         try {
             const players = await prisma.player.findMany({
-                where: q ? {
-                    name: {
-                        contains: q,
-                    }
-                }
-                : undefined,
+                where: {
+                    ...(q && {
+                        name: {
+                            contains: q,
+                        }
+                    }),
+                    ...(nationality && {
+                        nationality: {
+                            contains: nationality,
+                        }
+                    }),
+                    ...(birthday && {
+                        birthday: {
+                            contains: birthday,
+                        }
+                    }),
+                    ...(position && {
+                        position: {
+                            contains: position,
+                        }
+                    }),
+                    ...(teamId && {
+                        teamId: {
+                            equals: teamId,
+                        }
+                    })
+                },
                 orderBy: {
-                    name: 'asc' // ordena por nome
+                    name: 'asc'
                 }
-            })
+            });
             reply.send(players);
         } catch (error) {
             console.error(error);
