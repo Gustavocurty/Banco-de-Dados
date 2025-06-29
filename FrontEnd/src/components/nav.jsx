@@ -2,7 +2,6 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 export default function Nav() {
-
   return (
     <nav className="bg-blue-500 p-4 shadow-md fixed top-0 left-0 w-full z-10">
       <div className="container mx-auto flex justify-between items-center">
@@ -22,6 +21,9 @@ export default function Nav() {
           </Link>
           <Link to="/contratos" className="text-white hover:text-blue-200">
             Contratos
+          </Link>
+          <Link to="/nacionalidades" className="text-white hover:text-blue-200">
+            Nacionalidades
           </Link>
         </div>
       </div>

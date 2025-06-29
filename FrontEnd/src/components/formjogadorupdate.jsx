@@ -6,63 +6,55 @@ export default function FormJogadorUpdate() {
   const { id } = useParams();
 
   const [formData, setFormData] = useState({
-    nome: "",
-    nacionalidade: "",
-    nascimento: "",
-    posicao: "",
-    timeId: "",
+    name: "",
+    birthday: "",
+    nacionalidadeId: "",
+    position: "",
   });
 
-  const [times, setTimes] = useState([]);
+  const [nacionalidades, setNacionalidades] = useState([]);
+  const [posicoes] = useState([
+    "GOLEIRO",
+    "ZAGUEIRO",
+    "LATERAL_ESQUERDO",
+    "LATERAL_DIREITO",
+    "MEIO_CAMPO",
+    "ATACANTE",
+  ]);
 
   useEffect(() => {
-    async function fetchJogador() {
-      if (!id) return;
+    async function fetchData() {
       try {
         const res = await fetch(`http://localhost:3333/player/${id}`);
-        if (!res.ok) {
-          alert("Erro ao buscar jogador!");
-          return;
-        }
+        if (!res.ok) throw new Error("Erro ao buscar jogador!");
         const jogador = await res.json();
-
         setFormData({
-          nome: jogador.name || "",
-          nacionalidade: jogador.nationality || "",
-          nascimento: jogador.birthday ? jogador.birthday.slice(0, 10) : "",
-          posicao: jogador.position || "",
-          timeId: jogador.teamId ? String(jogador.teamId) : "",
+          name: jogador.name || "",
+          birthday: jogador.birthday ? jogador.birthday.slice(0, 10) : "",
+          nacionalidadeId: jogador.nacionalidadeId || "",
+          position: jogador.position || "",
         });
-      } catch {
-        alert("Erro na conexão ao buscar jogador!");
+
+        const resNac = await fetch("http://localhost:3333/nacionalidades");
+        const dataNac = await resNac.json();
+        setNacionalidades(Array.isArray(dataNac) ? dataNac : []);
+      } catch (err) {
+        console.error("Erro ao buscar dados:", err);
+        alert("Erro ao buscar dados para o formulário.");
       }
     }
 
-    async function fetchTimes() {
-      try {
-        const res = await fetch("http://localhost:3333/team");
-        if (res.ok) {
-          const data = await res.json();
-          setTimes(data);
-        }
-      } catch {
-        setTimes([]);
-      }
-    }
-
-    fetchTimes();
-    fetchJogador();
+    fetchData();
   }, [id]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Função para evitar erro na data: fixa a hora para 12:00 local, para não alterar o dia
   const formatDateLocalToISO = (dateStr) => {
     if (!dateStr) return "";
     const [year, month, day] = dateStr.split("-");
-    const date = new Date(Number(year), Number(month) - 1, Number(day), 12, 0, 0);
+    const date = new Date(Number(year), Number(month) - 1, Number(day), 12);
     return date.toISOString();
   };
 
@@ -70,11 +62,10 @@ export default function FormJogadorUpdate() {
     e.preventDefault();
 
     const payload = {
-      name: formData.nome,
-      nationality: formData.nacionalidade,
-      birthday: formatDateLocalToISO(formData.nascimento),
-      position: formData.posicao,
-      teamId: Number(formData.timeId),
+      name: formData.name.trim(),
+      birthday: formatDateLocalToISO(formData.birthday),
+      nacionalidadeId: Number(formData.nacionalidadeId),
+      position: formData.position,
     };
 
     try {
@@ -86,115 +77,77 @@ export default function FormJogadorUpdate() {
 
       if (!res.ok) {
         const errorData = await res.json();
-        alert(`Erro ao atualizar jogador: ${errorData.message || res.statusText}`);
+        alert(`Erro ao atualizar jogador: ${errorData.error || res.statusText}`);
         return;
       }
 
       navigate("/jogadores");
-    } catch (error) {
-      alert(`Erro na conexão: ${error.message}`);
+    } catch (err) {
+      console.error("Erro ao enviar atualização:", err);
+      alert("Erro ao atualizar jogador.");
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center w-lg bg-blue-400 p-8 rounded-lg shadow-lg mt-30">
+    <div className="flex flex-col items-center justify-center max-w-lg w-full bg-blue-400 p-8 rounded-lg shadow-lg mt-30 mx-auto">
       <h1 className="text-3xl text-white font-bold mb-6">Atualizar Jogador</h1>
       <form onSubmit={handleSubmit} className="w-full max-w-md">
         <div className="mb-4">
-          <label
-            className="block text-white text-sm font-bold mb-2"
-            htmlFor="nome"
-          >
-            Nome do Jogador
-          </label>
+          <label htmlFor="name" className="block text-white text-sm font-bold mb-2">Nome</label>
           <input
             type="text"
-            id="nome"
-            name="nome"
-            placeholder="Digite o nome do jogador"
+            id="name"
+            name="name"
             required
-            value={formData.nome}
+            value={formData.name}
             onChange={handleChange}
-            className="shadow border-none appearance-none border rounded w-full py-2 px-3 text-black placeholder-black bg-white leading-tight focus:outline-none focus:shadow-outline"
+            className="shadow rounded w-full py-2 px-3 text-black bg-white leading-tight focus:outline-none"
           />
         </div>
 
         <div className="mb-4">
-          <label
-            className="block text-white text-sm font-bold mb-2"
-            htmlFor="nacionalidade"
-          >
-            Nacionalidade
-          </label>
-          <input
-            type="text"
-            id="nacionalidade"
-            name="nacionalidade"
-            placeholder="Digite a nacionalidade do jogador"
+          <label htmlFor="nacionalidadeId" className="block text-white text-sm font-bold mb-2">Nacionalidade</label>
+          <select
+            id="nacionalidadeId"
+            name="nacionalidadeId"
             required
-            value={formData.nacionalidade}
+            value={formData.nacionalidadeId}
             onChange={handleChange}
-            className="shadow border-none appearance-none border rounded w-full py-2 px-3 text-black placeholder-black bg-white leading-tight focus:outline-none focus:shadow-outline"
-          />
+            className="shadow rounded w-full py-2 px-3 text-black bg-white leading-tight focus:outline-none"
+          >
+            <option value="">Selecione...</option>
+            {nacionalidades.map((nac) => (
+              <option key={nac.id} value={nac.id}>{nac.nome}</option>
+            ))}
+          </select>
         </div>
 
         <div className="mb-4">
-          <label
-            className="block text-white text-sm font-bold mb-2"
-            htmlFor="posicao"
-          >
-            Posição
-          </label>
-          <input
-            type="text"
-            id="posicao"
-            name="posicao"
-            placeholder="Digite a posição do jogador"
-            required
-            value={formData.posicao}
-            onChange={handleChange}
-            className="shadow border-none appearance-none border rounded w-full py-2 px-3 text-black placeholder-black bg-white leading-tight focus:outline-none focus:shadow-outline"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label
-            className="block text-white text-sm font-bold mb-2"
-            htmlFor="nascimento"
-          >
-            Data de Nascimento
-          </label>
+          <label htmlFor="birthday" className="block text-white text-sm font-bold mb-2">Data de Nascimento</label>
           <input
             type="date"
-            id="nascimento"
-            name="nascimento"
+            id="birthday"
+            name="birthday"
             required
-            value={formData.nascimento}
+            value={formData.birthday}
             onChange={handleChange}
-            className="shadow border-none appearance-none border rounded w-full py-2 px-3 text-black bg-white leading-tight focus:outline-none focus:shadow-outline"
+            className="shadow rounded w-full py-2 px-3 text-black bg-white leading-tight focus:outline-none"
           />
         </div>
 
         <div className="mb-4">
-          <label
-            className="block text-white text-sm font-bold mb-2"
-            htmlFor="timeId"
-          >
-            Time
-          </label>
+          <label htmlFor="position" className="block text-white text-sm font-bold mb-2">Posição</label>
           <select
-            id="timeId"
-            name="timeId"
+            id="position"
+            name="position"
             required
-            value={formData.timeId}
+            value={formData.position}
             onChange={handleChange}
-            className="shadow border-none appearance-none border rounded w-full py-2 px-3 text-black bg-white leading-tight focus:outline-none focus:shadow-outline"
+            className="shadow rounded w-full py-2 px-3 text-black bg-white leading-tight focus:outline-none"
           >
-            <option value="">Selecione o time</option>
-            {times.map((time) => (
-              <option key={time.id} value={time.id}>
-                {time.name}
-              </option>
+            <option value="">Selecione...</option>
+            {posicoes.map((p) => (
+              <option key={p} value={p}>{p.replace("_", " ")}</option>
             ))}
           </select>
         </div>
@@ -202,14 +155,14 @@ export default function FormJogadorUpdate() {
         <div className="flex items-center justify-between">
           <button
             type="submit"
-            className="bg-green-500 cursor-pointer hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-300"
+            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition"
           >
-            Atualizar jogador
+            Atualizar Jogador
           </button>
           <button
             type="button"
-            className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-300 cursor-pointer"
             onClick={() => navigate("/jogadores")}
+            className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition"
           >
             Voltar
           </button>

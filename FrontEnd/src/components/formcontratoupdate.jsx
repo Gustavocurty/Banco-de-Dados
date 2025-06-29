@@ -66,7 +66,6 @@ export default function FormContratoUpdate() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Função para evitar erro na data: fixa a hora para 12:00 local, para não alterar o dia
   const formatDateLocalToISO = (dateStr) => {
     if (!dateStr) return "";
     const [year, month, day] = dateStr.split("-");
@@ -99,7 +98,7 @@ export default function FormContratoUpdate() {
 
       navigate("/contratos");
     } catch (error) {
-      alert(`Erro na conexão: ${error.message}`);
+      alert(`Erro na conexão`);
     }
   };
 
@@ -184,7 +183,7 @@ export default function FormContratoUpdate() {
             type="submit"
             className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
           >
-            Atualizar contrato
+            Atualizar Contrato
           </button>
           <button
             type="button"
