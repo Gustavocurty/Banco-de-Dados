@@ -7,43 +7,52 @@ export default function FormTimeUpdate() {
 
   const [formData, setFormData] = useState({
     name: "",
-    country: "",
-    foundation: ""
+    foundation: "",
+    nacionalidadeId: "",
   });
+  const [nacionalidades, setNacionalidades] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!id) return;
+    async function fetchNacionalidades() {
+      try {
+        const res = await fetch("http://localhost:3333/nacionalidades");
+        if (!res.ok) throw new Error("Erro ao carregar nacionalidades");
+        const data = await res.json();
+        setNacionalidades(data);
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+    fetchNacionalidades();
+  }, []);
 
+  useEffect(() => {
     async function fetchTeam() {
       try {
         const res = await fetch(`http://localhost:3333/team/${id}`);
-        if (!res.ok) {
-          alert("Time não encontrado!");
-          return;
-        }
+        if (!res.ok) throw new Error("Time não encontrado");
         const team = await res.json();
         setFormData({
           name: team.name || "",
-          country: team.country || "",
-          foundation: team.foundation ? team.foundation.slice(0, 10) : ""
+          foundation: team.foundation ? team.foundation.slice(0, 10) : "",
+          nacionalidadeId: team.nacionalidadeId ? team.nacionalidadeId.toString() : "",
         });
-      } catch (error) {
-        alert("Erro ao buscar time!");
+      } catch (err) {
+        alert(err.message);
       }
     }
-
-    fetchTeam();
+    if (id) fetchTeam();
   }, [id]);
 
   const handleChange = (e) => {
     setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     }));
   };
 
-  // Função para evitar erro na data: fixa a hora para 12:00 local, para não alterar o dia
-  const formatDateLocalToISO = (dateStr) => {
+  const fixDateToISO = (dateStr) => {
     if (!dateStr) return "";
     const [year, month, day] = dateStr.split("-");
     const date = new Date(Number(year), Number(month) - 1, Number(day), 12, 0, 0);
@@ -52,37 +61,46 @@ export default function FormTimeUpdate() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const payload = {
-      name: formData.name,
-      country: formData.country,
-      foundation: formatDateLocalToISO(formData.foundation),
-    };
+    if (loading) return;
+    setLoading(true);
 
     try {
+      const nacionalidadeSelecionada = nacionalidades.find(
+        (n) => n.id === Number(formData.nacionalidadeId)
+      );
+
+      const payload = {
+        name: formData.name.trim(),
+        foundation: fixDateToISO(formData.foundation), 
+        nacionalidadeId: Number(formData.nacionalidadeId),
+        country: nacionalidadeSelecionada ? nacionalidadeSelecionada.nome : "",
+      };
+
       const res = await fetch(`http://localhost:3333/team/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
-        alert("Erro ao atualizar time!");
-        return;
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Erro ao atualizar time");
       }
 
       navigate("/times");
-    } catch (error) {
-      alert("Erro ao atualizar time!");
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center w-lg bg-blue-400 p-8 rounded-lg shadow-lg mt-30">
+    <div className="flex flex-col items-center justify-center max-w-lg w-full bg-blue-400 p-8 rounded-lg shadow-lg mt-10 mx-auto">
       <h1 className="text-3xl text-white font-bold mb-6">Atualizar Time</h1>
-      <form onSubmit={handleSubmit} className="w-full max-w-md">
+      <form onSubmit={handleSubmit} className="w-full">
         <div className="mb-4">
-          <label className="block text-white text-sm font-bold mb-2" htmlFor="name">
+          <label htmlFor="name" className="block text-white font-bold mb-2">
             Nome do Time
           </label>
           <input
@@ -92,29 +110,13 @@ export default function FormTimeUpdate() {
             value={formData.name}
             onChange={handleChange}
             required
-            className="shadow border-none appearance-none border rounded w-full py-2 px-3 text-black bg-white"
+            className="bg-white text-black w-full rounded py-2 px-3"
             placeholder="Nome do time"
           />
         </div>
 
         <div className="mb-4">
-          <label className="block text-white text-sm font-bold mb-2" htmlFor="country">
-            País
-          </label>
-          <input
-            type="text"
-            id="country"
-            name="country"
-            value={formData.country}
-            onChange={handleChange}
-            required
-            className="shadow border-none appearance-none border rounded w-full py-2 px-3 text-black bg-white"
-            placeholder="País do time"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-white text-sm font-bold mb-2" htmlFor="foundation">
+          <label htmlFor="foundation" className="block text-white font-bold mb-2">
             Fundação
           </label>
           <input
@@ -124,21 +126,44 @@ export default function FormTimeUpdate() {
             value={formData.foundation}
             onChange={handleChange}
             required
-            className="shadow border-none appearance-none border rounded w-full py-2 px-3 text-black bg-white"
+            className="bg-white text-black w-full rounded py-2 px-3"
           />
         </div>
 
-        <div className="flex items-center justify-between">
+        <div className="mb-6">
+          <label htmlFor="nacionalidadeId" className="block text-white font-bold mb-2">
+            Nacionalidade
+          </label>
+          <select
+            id="nacionalidadeId"
+            name="nacionalidadeId"
+            value={formData.nacionalidadeId}
+            onChange={handleChange}
+            required
+            className="bg-white text-black w-full rounded py-2 px-3"
+          >
+            <option value="">Selecione uma nacionalidade</option>
+            {nacionalidades.map((n) => (
+              <option key={n.id} value={n.id}>
+                {n.nome}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex justify-between">
           <button
             type="submit"
-            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-300"
+            disabled={loading}
+            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
           >
             Atualizar Time
           </button>
           <button
             type="button"
             onClick={() => navigate("/times")}
-            className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-300"
+            disabled={loading}
+            className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
           >
             Voltar
           </button>

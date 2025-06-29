@@ -3,23 +3,40 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit, faTrash, faAdd } from "@fortawesome/free-solid-svg-icons";
 import DatePicker, { registerLocale } from "react-datepicker";
 import ptBR from "date-fns/locale/pt-BR";
+import { Link } from "react-router-dom";
 
 import "react-datepicker/dist/react-datepicker.css";
-
 registerLocale("ptBR", ptBR);
+
+const positionDisplayMap = {
+  GOLEIRO: "Goleiro",
+  ZAGUEIRO: "Zagueiro",
+  LATERAL_ESQUERDO: "Lateral Esquerdo",
+  LATERAL_DIREITO: "Lateral Direito",
+  MEIO_CAMPO: "Meio Campo",
+  ATACANTE: "Atacante",
+};
+
+const positionOptions = [
+  { value: "", label: "Todas" },
+  { value: "GOLEIRO", label: "Goleiro" },
+  { value: "ZAGUEIRO", label: "Zagueiro" },
+  { value: "LATERAL_ESQUERDO", label: "Lateral Esquerdo" },
+  { value: "LATERAL_DIREITO", label: "Lateral Direito" },
+  { value: "MEIO_CAMPO", label: "Meio Campo" },
+  { value: "ATACANTE", label: "Atacante" },
+];
 
 export default function Player() {
   const [jogadores, setJogadores] = useState([]);
-  const [times, setTimes] = useState([]);
-  const [JogadoresSelecionados, setJogadoresSelecionados] = useState([]);
+  const [jogadoresSelecionados, setJogadoresSelecionados] = useState([]);
   const [searchJogador, setSearchJogador] = useState("");
   const [searchNacionalidade, setSearchNacionalidade] = useState("");
   const [searchDataNascimento, setSearchDataNascimento] = useState(null);
   const [searchPosicao, setSearchPosicao] = useState("");
-  const [searchTime, setSearchTime] = useState("");
 
   useEffect(() => {
-    const fetchJogadores = async () => {
+    async function fetchJogadores() {
       try {
         const res = await fetch("http://localhost:3333/player");
         const data = await res.json();
@@ -27,37 +44,19 @@ export default function Player() {
       } catch (error) {
         console.error("Erro ao buscar os jogadores:", error);
       }
-    };
+    }
     fetchJogadores();
   }, []);
 
-  useEffect(() => {
-    const fetchTimes = async () => {
-      try {
-        const res = await fetch("http://localhost:3333/team");
-        const data = await res.json();
-        setTimes(data);
-      } catch (error) {
-        console.error("Erro ao buscar os times:", error);
-      }
-    };
-    fetchTimes();
-  }, []);
-
-  const getTeamName = (teamId) => {
-    const team = times.find((t) => t.id === teamId);
-    return team ? team.name : "Sem time";
-  };
-
   const handleDelete = async (id) => {
     if (!window.confirm("Tem certeza que deseja excluir este jogador?")) return;
-
     try {
       const response = await fetch(`http://localhost:3333/player/${id}`, {
         method: "DELETE",
       });
       if (response.ok) {
-        setJogadores((prev) => prev.filter((jogador) => jogador.id !== id));
+        setJogadores((prev) => prev.filter((j) => j.id !== id));
+        setJogadoresSelecionados((prev) => prev.filter((j) => j.id !== id));
       } else {
         alert("Erro ao excluir o jogador");
       }
@@ -69,8 +68,10 @@ export default function Player() {
 
   useEffect(() => {
     if (
-      !searchJogador && !searchNacionalidade &&
-      !searchDataNascimento && !searchPosicao && !searchTime
+      !searchJogador &&
+      !searchNacionalidade &&
+      !searchDataNascimento &&
+      !searchPosicao
     ) {
       setJogadoresSelecionados([]);
       return;
@@ -78,39 +79,47 @@ export default function Player() {
 
     const params = new URLSearchParams();
     if (searchJogador) params.append("q", searchJogador);
-    if (searchNacionalidade) params.append("nationality", searchNacionalidade);
-    if (searchDataNascimento) params.append("birthday", searchDataNascimento.toISOString().split("T")[0]);
+    if (searchDataNascimento)
+      params.append("birthday", searchDataNascimento.toISOString().split("T")[0]);
     if (searchPosicao) params.append("position", searchPosicao);
-    if (searchTime) params.append("teamId", searchTime);
+    
+    if (searchNacionalidade) {
+      const filtrado = jogadores.filter((j) =>
+        j.nacionalidade?.nome.toLowerCase().includes(searchNacionalidade.toLowerCase())
+      );
+      setJogadoresSelecionados(filtrado);
+      return;
+    }
 
-    const fetchJogadores = async () => {
+    async function fetchFiltrados() {
       try {
         const res = await fetch(`http://localhost:3333/player?${params.toString()}`);
         const data = await res.json();
         setJogadoresSelecionados(data);
       } catch (error) {
-        console.error("Erro ao buscar os jogadores:", error);
+        console.error("Erro ao buscar jogadores", error);
       }
-    };
+    }
 
-    fetchJogadores();
-  }, [searchJogador, searchNacionalidade, searchDataNascimento, searchPosicao, searchTime]);
+    fetchFiltrados();
+  }, [searchJogador, searchNacionalidade, searchDataNascimento, searchPosicao, jogadores]);
 
-  const lista = (searchJogador || searchNacionalidade || searchDataNascimento || searchPosicao || searchTime)
-    ? JogadoresSelecionados
-    : jogadores;
+  const lista =
+    searchJogador || searchNacionalidade || searchDataNascimento || searchPosicao
+      ? jogadoresSelecionados
+      : jogadores;
 
   return (
-    <div className="flex flex-col items-center justify-center w-[95%] bg-blue-400 p-8 rounded-lg shadow-lg mt-30">
+    <div className="flex flex-col items-center justify-center w-[95%] bg-blue-400 p-8 rounded-lg shadow-lg mt-10">
       <div className="flex justify-between items-center w-full mb-5">
         <h1 className="text-3xl text-white font-bold">JOGADORES</h1>
-        <a
-          href="/jogadores/criar"
+        <Link
+          to="/jogadores/criar"
           className="bg-white text-black px-4 py-2 rounded hover:bg-green-500 hover:text-white transition-colors duration-300 cursor-pointer flex items-center gap-2"
         >
           <FontAwesomeIcon icon={faAdd} />
           <p className="font-bold">Adicionar Jogador</p>
-        </a>
+        </Link>
       </div>
 
       <div className="overflow-x-auto w-full">
@@ -121,7 +130,6 @@ export default function Player() {
               <th className="py-3 px-6 text-center">Nacionalidade</th>
               <th className="py-3 px-6 text-center">Nascimento</th>
               <th className="py-3 px-6 text-center">Posição</th>
-              <th className="py-3 px-6 text-center">Time</th>
               <th className="py-3 px-6 text-center">Ações</th>
             </tr>
             <tr className="bg-gray-200">
@@ -131,7 +139,7 @@ export default function Player() {
                   value={searchJogador}
                   placeholder="Pesquisar Jogador 🔎"
                   onChange={(e) => setSearchJogador(e.target.value)}
-                  className="bg-white border border-gray-300 rounded-lg w-full !text-black placeholder-black text-center py-1 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                  className="bg-white border border-gray-300 rounded-lg w-full text-black placeholder-black text-center py-1 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                 />
               </th>
               <th className="py-2 px-6 text-center">
@@ -140,7 +148,7 @@ export default function Player() {
                   value={searchNacionalidade}
                   placeholder="Pesquisar Nacionalidade 🔎"
                   onChange={(e) => setSearchNacionalidade(e.target.value)}
-                  className="bg-white border border-gray-300 rounded-lg w-full !text-black placeholder-black text-center py-1 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                  className="bg-white border border-gray-300 rounded-lg w-full text-black placeholder-black text-center py-1 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                 />
               </th>
               <th className="py-2 px-6 text-center">
@@ -149,30 +157,20 @@ export default function Player() {
                   onChange={(date) => setSearchDataNascimento(date)}
                   dateFormat="dd/MM/yyyy"
                   locale="ptBR"
-                  placeholderText="Pesquisar Nascimento"
-                  className="bg-white border border-gray-300 rounded-lg w-full min-w-[120px] !text-black placeholder-black py-1 px-2 text-center focus:outline-none focus:ring-2 focus:ring-blue-400 transition mx-auto block"
+                  placeholderText="Pesquisar Nascimento 🔎"
+                  className="bg-white border border-gray-300 rounded-lg w-full min-w-[120px] text-black placeholder-black py-1 px-2 text-center focus:outline-none focus:ring-2 focus:ring-blue-400 transition mx-auto block"
                   isClearable
                 />
               </th>
               <th className="py-2 px-6 text-center">
-                <input
-                  type="text"
-                  value={searchPosicao}
-                  placeholder="Pesquisar Posição 🔎"
-                  onChange={(e) => setSearchPosicao(e.target.value)}
-                  className="bg-white border border-gray-300 rounded-lg w-full !text-black placeholder-black text-center py-1 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-                />
-              </th>
-              <th className="py-2 px-6 text-center">
                 <select
-                  value={searchTime}
-                  onChange={(e) => setSearchTime(e.target.value)}
-                  className="bg-white border border-gray-300 rounded-lg w-full !text-black placeholder-black text-center py-1 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                  value={searchPosicao}
+                  onChange={(e) => setSearchPosicao(e.target.value)}
+                  className="bg-white border border-gray-300 rounded-lg w-full text-black text-center py-1 focus:outline-none focus:ring-2 focus:ring-blue-400 transition cursor-pointer"
                 >
-                  <option value="">Todos</option>
-                  {times.map((time) => (
-                    <option key={time.id} value={time.id}>
-                      {time.name}
+                  {positionOptions.map(({ value, label }) => (
+                    <option key={value} value={value}>
+                      {label}
                     </option>
                   ))}
                 </select>
@@ -181,10 +179,10 @@ export default function Player() {
             </tr>
           </thead>
           <tbody>
-            {lista && lista.length === 0 ? (
+            {lista.length === 0 ? (
               <tr>
-                <td colSpan={6} className="py-4 px-6 text-center text-gray-500 font-semibold bg-gray-50">
-                  Nenhum registro encontrado ...
+                <td colSpan={5} className="py-4 px-6 text-center text-gray-500 font-semibold bg-gray-50">
+                  Nenhum registro encontrado.
                 </td>
               </tr>
             ) : (
@@ -194,12 +192,13 @@ export default function Player() {
                   className="border-b text-black border-gray-200 hover:bg-blue-100 transition-colors duration-200"
                 >
                   <td className="py-2 px-6 text-center whitespace-nowrap font-medium">{jogador.name}</td>
-                  <td className="py-2 px-6 text-center whitespace-nowrap">{jogador.nationality}</td>
+                  <td className="py-2 px-6 text-center whitespace-nowrap">{jogador.nacionalidade?.nome || "—"}</td>
                   <td className="py-2 px-6 text-center whitespace-nowrap">
                     {new Date(jogador.birthday).toLocaleDateString("pt-BR")}
                   </td>
-                  <td className="py-2 px-6 text-center whitespace-nowrap">{jogador.position}</td>
-                  <td className="py-2 px-6 text-center whitespace-nowrap">{getTeamName(jogador.teamId)}</td>
+                  <td className="py-2 px-6 text-center whitespace-nowrap">
+                    {positionDisplayMap[jogador.position] || jogador.position}
+                  </td>
                   <td className="py-2 px-6 text-right whitespace-nowrap flex gap-2 justify-end">
                     <button
                       className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-700 transition-colors duration-300 mr-2 shadow-md hover:scale-105"
@@ -207,12 +206,12 @@ export default function Player() {
                     >
                       <FontAwesomeIcon icon={faTrash} />
                     </button>
-                    <a
+                    <Link
+                      to={`/jogadores/editar/${jogador.id}`}
                       className="bg-blue-500 text-white px-4 py-[6px] rounded hover:bg-blue-700 transition-colors duration-300 shadow-md hover:scale-105"
-                      href={`/jogadores/editar/${jogador.id}`}
                     >
                       <FontAwesomeIcon icon={faEdit} />
-                    </a>
+                    </Link>
                   </td>
                 </tr>
               ))

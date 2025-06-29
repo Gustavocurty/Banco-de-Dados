@@ -1,175 +1,159 @@
 import { prisma } from "../lib/prisma";
 import { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 
-export const teamController: FastifyPluginAsyncZod = async app => {
+export const teamController: FastifyPluginAsyncZod = async (app) => {
   const { z } = await import("zod");
 
   const teamSchema = z.object({
     name: z.string(),
     country: z.string(),
-    foundation: z.string().datetime()
+    foundation: z.string(),
+    nacionalidadeId: z.number(),
   });
 
   const teamResponseSchema = z.object({
     id: z.number(),
     name: z.string(),
     country: z.string(),
-    foundation: z.string()
+    foundation: z.string(),
+    nacionalidadeId: z.number(),
   });
 
-  // POST - Criar time
-  app.post('/team', {
+  const errorSchema = z.object({ error: z.string() });
+
+  const idParamSchema = z.object({
+    id: z.string().regex(/^\d+$/).transform(Number),
+  });
+
+  const querySchema = z.object({
+    q: z.string().optional(),
+    country: z.string().optional(),
+    foundation: z.string().optional(),
+  });
+
+  // CREATE
+  app.post("/team", {
     schema: {
       body: teamSchema,
       response: {
         201: teamResponseSchema,
-        500: z.object({ error: z.string() })
-      }
-    }
+        500: errorSchema,
+      },
+    },
   }, async (request, reply) => {
-    const { name, country, foundation } = request.body;
-
+    const { name, country, foundation, nacionalidadeId } = request.body;
     try {
       const newTeam = await prisma.team.create({
-        data: {
-          name,
-          country,
-          foundation
-        }
+        data: { name, country, foundation, nacionalidadeId },
       });
       reply.status(201).send(newTeam);
     } catch (error) {
       console.error(error);
-      reply.status(500).send({ error: 'Erro ao criar time!' });
+      reply.status(500).send({ error: "Erro ao criar time!" });
     }
   });
 
-  // GET - Listar todos os times
-  app.get('/team', {
+  // SELECT * FROM player
+  app.get("/team", {
     schema: {
-      querystring: z.object({
-        q: z.string().optional(),
-        country: z.string().optional(),
-        foundation: z.string().optional()
-      }),
+      querystring: querySchema,
       response: {
         200: z.array(teamResponseSchema),
-        500: z.object({ error: z.string() })
-      }
-    }
+        500: errorSchema,
+      },
+    },
   }, async (request, reply) => {
-    const { q, country, foundation } = request.query as {
-      q?: string,
-      country?: string,
-      foundation?: string
-    };
-    console.log('Query time:', q, country, foundation);
-
+    const { q, country, foundation } = request.query;
     try {
       const teams = await prisma.team.findMany({
         where: {
-          ...(q && {
-            name: {
-              contains: q,
-            }
-          }),
-          ...(country && {
-            country: {
-              contains: country,
-            }
-          }),
-          ...(foundation && {
-            foundation: {
-              contains: foundation
-            }
-          })
+          ...(q && { name: { contains: q } }),
+          ...(country && { country: { contains: country } }),
+          ...(foundation && { foundation: { contains: foundation } }),
         },
-        orderBy: {
-          name: 'asc'
-        }
+        orderBy: { name: "asc" },
       });
       reply.send(teams);
     } catch (error) {
       console.error(error);
-      reply.status(500).send({ error: 'Erro ao buscar times.' });
+      reply.status(500).send({ error: "Erro ao buscar times." });
     }
   });
 
-  // GET - Buscar time por ID
-  app.get('/team/:id', {
+  // SELECT * FROM player WHERE id = ?
+  app.get("/team/:id", {
     schema: {
-      params: z.object({ id: z.string() }),
+      params: idParamSchema,
       response: {
         200: teamResponseSchema,
-        404: z.object({ error: z.string() }),
-        500: z.object({ error: z.string() })
-      }
-    }
+        404: errorSchema,
+        500: errorSchema,
+      },
+    },
   }, async (request, reply) => {
     const { id } = request.params;
     try {
-      const team = await prisma.team.findUnique({
-        where: { id: Number(id) }
-      });
-      if (!team) {
-        reply.status(404).send({ error: 'Time não encontrado.' });
-        return;
-      }
+      const team = await prisma.team.findUnique({ where: { id } });
+      if (!team) return reply.status(404).send({ error: "Time não encontrado." });
       reply.send(team);
     } catch (error) {
       console.error(error);
-      reply.status(500).send({ error: 'Erro ao buscar time.' });
+      reply.status(500).send({ error: "Erro ao buscar time." });
     }
   });
 
-  // PUT - Atualizar time
-  app.put('/team/:id', {
+  // UPDATE - where id
+  app.put("/team/:id", {
     schema: {
-      params: z.object({ id: z.string() }),
+      params: idParamSchema,
       body: teamSchema,
       response: {
         200: teamResponseSchema,
-        500: z.object({ error: z.string() })
-      }
-    }
+        404: errorSchema,
+        500: errorSchema,
+      },
+    },
   }, async (request, reply) => {
     const { id } = request.params;
-    const { name, country, foundation } = request.body;
-
+    const { name, country, foundation, nacionalidadeId } = request.body;
     try {
+      const existente = await prisma.team.findUnique({ where: { id } });
+      if (!existente) {
+        return reply.status(404).send({ error: "Time não encontrado." });
+      }
       const updatedTeam = await prisma.team.update({
-        where: { id: Number(id) },
-        data: {
-          name,
-          country,
-          foundation
-        }
+        where: { id },
+        data: { name, country, foundation, nacionalidadeId },
       });
       reply.status(200).send(updatedTeam);
     } catch (error) {
       console.error(error);
-      reply.status(500).send({ error: 'Erro ao atualizar time.' });
+      reply.status(500).send({ error: "Erro ao atualizar time." });
     }
   });
 
-  // DELETE - Remover time
-  app.delete('/team/:id', {
+  // DELETE
+  app.delete("/team/:id", {
     schema: {
-      params: z.object({ id: z.string() }),
+      params: idParamSchema,
       response: {
         200: z.object({ message: z.string() }),
-        500: z.object({ error: z.string() })
-      }
-    }
+        404: errorSchema,
+        500: errorSchema,
+      },
+    },
   }, async (request, reply) => {
     const { id } = request.params;
-
     try {
-      await prisma.team.delete({ where: { id: Number(id) } });
-      reply.send({ message: 'Time deletado com sucesso!' });
+      const existente = await prisma.team.findUnique({ where: { id } });
+      if (!existente) {
+        return reply.status(404).send({ error: "Time não encontrado." });
+      }
+      await prisma.team.delete({ where: { id } });
+      reply.send({ message: "Time deletado com sucesso!" });
     } catch (error) {
       console.error(error);
-      reply.status(500).send({ error: 'Erro ao deletar time.' });
+      reply.status(500).send({ error: "Erro ao deletar time." });
     }
   });
 };

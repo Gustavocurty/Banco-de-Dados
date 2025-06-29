@@ -3,43 +3,53 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit, faTrash, faAdd } from "@fortawesome/free-solid-svg-icons";
 import DatePicker, { registerLocale } from "react-datepicker";
 import ptBR from "date-fns/locale/pt-BR";
+import { Link } from "react-router-dom";
 
 import "react-datepicker/dist/react-datepicker.css";
-
 registerLocale("ptBR", ptBR);
 
 export default function Times() {
   const [times, setTimes] = useState([]);
-  const [search, _] = useState("");
-  const [timeSelecionado, setTimeSelecionado] = useState(null);
+  const [filteredTimes, setFilteredTimes] = useState([]);
   const [searchTime, setSearchTime] = useState("");
   const [searchPais, setSearchPais] = useState("");
   const [searchFundacao, setSearchFundacao] = useState("");
 
-  useEffect(() => {
-    const fetchTimes = async () => {
-      try {
-        const res = await fetch("http://localhost:3333/team");
-        const data = await res.json();
-        setTimes(data);
-      } catch (error) {
-        console.error("Erro ao buscar os times:", error);
-      }
-    };
+  const fetchTimes = async (queryParams = "") => {
+    try {
+      const res = await fetch(`http://localhost:3333/team${queryParams}`);
+      const data = await res.json();
+      setTimes(data);
+      setFilteredTimes(data);
+    } catch (error) {
+      console.error("Erro ao buscar os times:", error);
+    }
+  };
 
+  useEffect(() => {
     fetchTimes();
   }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (searchTime.trim() !== "") params.append("q", searchTime);
+    if (searchPais.trim() !== "") params.append("country", searchPais);
+    if (searchFundacao.trim() !== "") params.append("foundation", searchFundacao);
+
+    const query = params.toString() ? `?${params.toString()}` : "";
+    fetchTimes(query);
+  }, [searchTime, searchPais, searchFundacao]);
+
   const handleDelete = async (id) => {
-    if (!window.confirm("Tem certeza que deseja excluir este time?")) {
-      return;
-    }
+    if (!window.confirm("Tem certeza que deseja excluir este time?")) return;
+
     try {
       const response = await fetch(`http://localhost:3333/team/${id}`, {
         method: "DELETE",
       });
       if (response.ok) {
-        setTimes((prevTimes) => prevTimes.filter((time) => time.id !== id));
+        setTimes((prev) => prev.filter((time) => time.id !== id));
+        setFilteredTimes((prev) => prev.filter((time) => time.id !== id));
       } else {
         alert("Erro ao excluir o time");
       }
@@ -49,70 +59,17 @@ export default function Times() {
     }
   };
 
-  // Pesquisa por search (não usada no filtro atual, pode remover se quiser)
-  useEffect(() => {
-    if (search.trim() === "") {
-      setTimeSelecionado([]); // Limpa os resultados se a busca estiver vazia
-      return;
-    }
-
-    const fetchJogadores = async () => {
-      try {
-        const res = await fetch(`http://localhost:3333/team?q=${encodeURIComponent(search)}`);
-        const data = await res.json();
-        setTimeSelecionado(data);
-      } catch (error) {
-        console.error("Erro ao buscar os jogadores:", error);
-      }
-    };
-
-    fetchJogadores();
-  }, [search]);
-
-  // Pesquisa por filtros separados
-  useEffect(() => {
-    // Se todos os filtros estiverem vazios, limpa o filtro
-    if (
-      searchTime.trim() === "" &&
-      searchPais.trim() === "" &&
-      searchFundacao.trim() === ""
-    ) {
-      setTimeSelecionado([]);
-      return;
-    }
-
-    const params = new URLSearchParams();
-    if (searchTime.trim() !== "") params.append("q", searchTime);
-    if (searchPais.trim() !== "") params.append("country", searchPais);
-    if (searchFundacao.trim() !== "") params.append("foundation", searchFundacao);
-
-    const fetchTimes = async () => {
-      try {
-        const res = await fetch(`http://localhost:3333/team?${params.toString()}`);
-        const data = await res.json();
-        setTimeSelecionado(data);
-      } catch (error) {
-        console.error("Erro ao buscar os times:", error);
-      }
-    };
-
-    fetchTimes();
-  }, [searchTime, searchPais, searchFundacao]);
-
-  // Função para pegar a lista correta
-  const lista = (searchTime || searchPais || searchFundacao) ? timeSelecionado : times;
-
   return (
-    <div className="flex flex-col items-center justify-center w-[95%] bg-blue-400 p-8 rounded-lg shadow-lg mt-30">
+    <div className="flex flex-col items-center justify-center w-[95%] bg-blue-400 p-8 rounded-lg shadow-lg mt-10">
       <div className="flex justify-between items-center w-full mb-5">
         <h1 className="text-3xl text-white font-bold">TIMES</h1>
-        <a
-          href="/times/criar"
-          className="bg-white text-black px-4 py-2 rounded hover:bg-green-500 hover:text-white transition-colors duration-300 cursor-pointer flex items-center gap-2"
+        <Link
+          to="/times/criar"
+          className="bg-white text-black px-4 py-2 rounded hover:bg-green-500 hover:text-white transition-colors duration-300 flex items-center gap-2"
         >
           <FontAwesomeIcon icon={faAdd} />
           <p className="font-bold">Adicionar Time</p>
-        </a>
+        </Link>
       </div>
 
       <div className="overflow-x-auto w-full">
@@ -152,7 +109,7 @@ export default function Times() {
                   }}
                   dateFormat="dd/MM/yyyy"
                   locale="ptBR"
-                  placeholderText="Data da Fundação"
+                  placeholderText="Data da Fundação 🔎"
                   className="bg-white border text-center border-gray-300 rounded-lg w-full min-w-[120px] !text-black placeholder-black py-1 px-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition mx-auto block"
                   isClearable
                 />
@@ -161,14 +118,14 @@ export default function Times() {
             </tr>
           </thead>
           <tbody>
-            {lista && lista.length === 0 ? (
+            {filteredTimes.length === 0 ? (
               <tr>
                 <td colSpan={4} className="py-4 px-6 text-center text-gray-500 font-semibold bg-gray-50">
-                  Nenhum registro encontrado ...
+                  Nenhum registro encontrado.
                 </td>
               </tr>
             ) : (
-              lista && lista.map((time) => (
+              filteredTimes.map((time) => (
                 <tr
                   key={time.id}
                   className="border-b text-black border-gray-200 hover:bg-blue-100 transition-colors duration-200"
@@ -180,17 +137,17 @@ export default function Times() {
                   </td>
                   <td className="py-2 px-6 text-right whitespace-nowrap flex gap-2 justify-end">
                     <button
-                      className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-700 transition-colors duration-300 mr-2 shadow-md hover:scale-105"
+                      className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-700 transition-colors duration-300 shadow-md hover:scale-105"
                       onClick={() => handleDelete(time.id)}
                     >
                       <FontAwesomeIcon icon={faTrash} />
                     </button>
-                    <a
+                    <Link
                       className="bg-blue-500 text-white px-4 py-[6px] rounded hover:bg-blue-700 transition-colors duration-300 shadow-md hover:scale-105"
-                      href={`/times/editar/${time.id}`}
+                      to={`/times/editar/${time.id}`}
                     >
                       <FontAwesomeIcon icon={faEdit} />
-                    </a>
+                    </Link>
                   </td>
                 </tr>
               ))

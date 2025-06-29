@@ -10,130 +10,179 @@ export default function FormEstatisticaUpdate() {
     teamId: "",
     goals: 0,
     assists: 0,
-    matches: 0
+    matches: 0,
   });
 
   const [players, setPlayers] = useState([]);
-  const [teams, setTeams] = useState([]);
+  const [contracts, setContracts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedContract, setSelectedContract] = useState("");
+
+  const formatDate = (dateStr) => {
+    const d = new Date(dateStr);
+    if (isNaN(d)) return "";
+    return d.toLocaleDateString("pt-BR");
+  };
 
   useEffect(() => {
+    async function fetchPlayers() {
+      try {
+        const res = await fetch("http://localhost:3333/player");
+        if (!res.ok) throw new Error("Erro ao buscar jogadores");
+        const data = await res.json();
+        setPlayers(data);
+      } catch {
+        setPlayers([]);
+      }
+    }
+
+    async function fetchContractsByPlayer(playerId) {
+      if (!playerId) {
+        setContracts([]);
+        return;
+      }
+      try {
+        const res = await fetch(`http://localhost:3333/contract/player/${playerId}`);
+        if (!res.ok) throw new Error("Erro ao buscar contratos do jogador");
+        const data = await res.json();
+        setContracts(data);
+      } catch {
+        setContracts([]);
+      }
+    }
+
     async function fetchEstatistica() {
       if (!id) return;
-      const res = await fetch(`http://localhost:3333/estatistic/${id}`);
-      if (res.ok) {
+      try {
+        const res = await fetch(`http://localhost:3333/estatistic/${id}`);
+        if (!res.ok) throw new Error("Erro ao buscar estatística");
         const estatistica = await res.json();
+
         setFormData({
           playerId: estatistica.playerId ?? "",
           teamId: estatistica.teamId ?? "",
           goals: estatistica.goals,
           assists: estatistica.assists,
-          matches: estatistica.matches
+          matches: estatistica.matches,
         });
-      } else {
-        alert("Erro ao buscar estatística!");
-      }
-    }
 
-    async function fetchPlayers() {
-      const res = await fetch("http://localhost:3333/player");
-      if (res.ok) {
-        const data = await res.json();
-        setPlayers(data);
-      }
-    }
+        await fetchContractsByPlayer(estatistica.playerId);
 
-    async function fetchTeams() {
-      const res = await fetch("http://localhost:3333/team");
-      if (res.ok) {
-        const data = await res.json();
-        setTeams(data);
+        setSelectedContract(""); 
+        setTimeout(() => {
+          const contrato = contracts.find((c) => c.teamId === estatistica.teamId);
+          if (contrato) setSelectedContract(contrato.id.toString());
+        }, 100);
+      } catch (error) {
+        alert(error.message);
       }
     }
 
     fetchPlayers();
-    fetchTeams();
     fetchEstatistica();
-  }, [id]);
+  }, [id, contracts.length]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+
+    setFormData((prev) => ({
       ...prev,
-      [name]: name === "goals" || name === "assists" || name === "matches"
-        ? Number(value)
-        : value
+      [name]: ["goals", "assists", "matches"].includes(name) ? Number(value) : value,
     }));
   };
 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+
+    const contrato = contracts.find((c) => c.id === Number(selectedContract));
+    if (!contrato) {
+      alert("Contrato atual não encontrado.");
+      setLoading(false);
+      return;
+    }
 
     const payload = {
       playerId: Number(formData.playerId),
-      teamId: Number(formData.teamId),
+      teamId: contrato.teamId,
+      contractStartDate: contrato.startDate,
+      contractEndDate: contrato.endDate,
       goals: Number(formData.goals),
       assists: Number(formData.assists),
-      matches: Number(formData.matches)
+      matches: Number(formData.matches),
     };
 
-    const res = await fetch(`http://localhost:3333/estatistic/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
+    try {
+      const res = await fetch(`http://localhost:3333/estatistic/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    if (res.ok) {
-      navigate("/estatisticas");
-    } else {
-      alert("Erro ao atualizar estatística.");
+      if (res.ok) {
+        navigate("/estatisticas");
+      } else {
+        const errorData = await res.json();
+        alert(errorData.error || "Erro ao atualizar estatística.");
+      }
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center w-lg bg-blue-400 p-8 rounded-lg shadow-lg mt-30">
+    <div className="flex flex-col items-center justify-center max-w-lg w-full bg-blue-400 p-8 rounded-lg shadow-lg mt-30 mx-auto">
       <h1 className="text-3xl text-white font-bold mb-6">Atualizar Estatística</h1>
       <form onSubmit={handleSubmit} className="w-full max-w-md">
+
         <div className="mb-4">
-          <label htmlFor="playerId" className="block text-white text-sm font-bold mb-2">Jogador</label>
+          <label htmlFor="playerId" className="block text-white text-sm font-bold mb-2">
+            Jogador
+          </label>
           <select
             id="playerId"
             name="playerId"
             required
             value={formData.playerId}
             onChange={handleChange}
-            className="shadow border-none rounded w-full py-2 px-3 text-black bg-white leading-tight focus:outline-none focus:shadow-outline"
+            disabled={loading}
+            className="shadow appearance-none rounded w-full py-2 px-3 text-black bg-white leading-tight focus:outline-none focus:shadow-outline"
           >
             <option value="">Selecione o jogador</option>
-            {players.map(player => (
-              <option key={player.id} value={player.id}>{player.name}</option>
+            {players.map((player) => (
+              <option key={player.id} value={player.id}>
+                {player.name}
+              </option>
             ))}
           </select>
         </div>
 
+        {/* Exibição do contrato atual fixo, para não ter risco da pessoa alterar pra um contrato já existente */}
         <div className="mb-4">
-          <label htmlFor="teamId" className="block text-white text-sm font-bold mb-2">Time</label>
-          <select
-            id="teamId"
-            name="teamId"
-            required
-            value={formData.teamId}
-            onChange={handleChange}
-            className="shadow border-none rounded w-full py-2 px-3 text-black bg-white leading-tight focus:outline-none focus:shadow-outline"
-          >
-            <option value="">Selecione o time</option>
-            {teams.map(team => (
-              <option key={team.id} value={team.id}>{team.name}</option>
-            ))}
-          </select>
+          <label className="block text-white text-sm font-bold mb-2">Contrato atual (Time e período)</label>
+          <div className="py-2 px-3 bg-white text-black rounded shadow">
+            {selectedContract
+              ? (() => {
+                  const contrato = contracts.find((c) => c.id === Number(selectedContract));
+                  if (!contrato) return "Contrato não encontrado";
+                  return `${contrato.team.name} (${formatDate(contrato.startDate)} - ${formatDate(contrato.endDate)})`;
+                })()
+              : "Carregando..."}
+          </div>
         </div>
 
-        {[
+        {[ 
           { id: "matches", label: "Partidas" },
           { id: "goals", label: "Gols" },
-          { id: "assists", label: "Assistências" }
+          { id: "assists", label: "Assistências" },
         ].map(({ id, label }) => (
           <div className="mb-4" key={id}>
-            <label htmlFor={id} className="block text-white text-sm font-bold mb-2">{label}</label>
+            <label htmlFor={id} className="block text-white text-sm font-bold mb-2">
+              {label}
+            </label>
             <input
               type="number"
               id={id}
@@ -142,19 +191,25 @@ export default function FormEstatisticaUpdate() {
               value={formData[id]}
               onChange={handleChange}
               required
-              className="shadow border-none rounded w-full py-2 px-3 text-black bg-white leading-tight focus:outline-none focus:shadow-outline"
+              disabled={loading}
+              className="shadow appearance-none rounded w-full py-2 px-3 text-black bg-white leading-tight focus:outline-none focus:shadow-outline"
             />
           </div>
         ))}
 
         <div className="flex items-center justify-between">
-          <button type="submit" className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-300"
+          >
             Atualizar Estatística
           </button>
           <button
             type="button"
+            disabled={loading}
             onClick={() => navigate("/estatisticas")}
-            className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+            className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-300"
           >
             Voltar
           </button>
