@@ -14,53 +14,73 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Position {
+  GOLEIRO
+  ZAGUEIRO
+  LATERAL_ESQUERDO
+  LATERAL_DIREITO
+  MEIO_CAMPO
+  ATACANTE
+}
+
+model Nacionalidade {
+  id    Int     @id @default(autoincrement())
+  nome  String
+
+  jogadores Player[]
+  times     Team[]
+}
+
 model Player {
-  id           Int     @id @default(autoincrement())
-  name         String
-  birthday     String  
-  nationality  String
-  position     String
-  teamId       Int?    // FK opcional para Times
+  id              Int           @id @default(autoincrement())
+  name            String
+  birthday        String
+  position        Position
+  nacionalidadeId Int
 
-  time         Team? @relation(fields: [teamId], references: [id])
+  nacionalidade   Nacionalidade @relation(fields: [nacionalidadeId], references: [id])
 
-  Estatistic Estatistic[]
-
-  Contract Contract[]
+  Estatistic      Estatistic[]
+  Contract        Contract[]
 }
 
 model Team {
-  id          Int       @id @default(autoincrement())
-  name        String
-  country     String
-  foundation  String
+  id              Int           @id @default(autoincrement())
+  name            String
+  country         String
+  foundation      String
+  nacionalidadeId Int
 
-  jogadores   Player[]
-
-  Estatistic Estatistic[]
-
-  Contract Contract[]
-}
-
-model Estatistic {
-  id          Int      @id @default(autoincrement())
-  playerId    Int?
-  teamId      Int?
-  goals       Int
-  assists     Int
-  matches     Int
-
-  jogador     Player? @relation(fields: [playerId], references: [id])
-  time        Team? @relation(fields: [teamId], references: [id])
+  nacionalidade   Nacionalidade @relation(fields: [nacionalidadeId], references: [id])
+  Estatistic      Estatistic[]
+  Contract        Contract[]
 }
 
 model Contract {
-  id          Int      @id @default(autoincrement())
-  playerId    Int
-  teamId      Int
-  startDate   String
-  endDate     String
+  id         Int     @id @default(autoincrement())
+  playerId   Int
+  teamId     Int
+  startDate  String
+  endDate    String
 
-  player      Player @relation(fields: [playerId], references: [id])
-  team        Team @relation(fields: [teamId], references: [id])
+  player     Player  @relation(fields: [playerId], references: [id])
+  team       Team    @relation(fields: [teamId], references: [id])
+
+  @@unique([playerId, startDate])
+}
+
+model Estatistic {
+  id                 Int     @id @default(autoincrement())
+  playerId           Int
+  teamId             Int
+  contractStartDate  String
+  contractEndDate    String   
+  goals              Int
+  assists            Int
+  matches            Int
+
+  jogador            Player @relation(fields: [playerId], references: [id])
+  time               Team   @relation(fields: [teamId], references: [id])
+
+  @@unique([playerId, teamId, contractStartDate, contractEndDate])
 }

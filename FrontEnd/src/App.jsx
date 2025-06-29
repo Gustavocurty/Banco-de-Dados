@@ -1,9 +1,12 @@
 import Nav from './components/nav'
 import Home from './pages/home'
 import Jogadores from './pages/jogadores'
-import Times from './pages/time'
+import Times from './pages/times'
 import Estatisticas from './pages/estatisticas'
 import Contratos from './pages/contratos'
+import Nacionalidades from './pages/nacionalidades'
+import FormNacionalidadeCreate from './components/formnacionalidadecreate'
+import FormNacionalidadeUpdate from './components/formnacionalidadeupdate'
 import FormTimesCreate from './components/formtimecreate'
 import FormTimesUpdate from './components/formtimeupdate'
 import FormJogadoresCreate from './components/formjogadorcreate'
@@ -12,6 +15,7 @@ import FormEstatisticaCreate from './components/formestatisticacreate'
 import FormEstatisticaUpdate from './components/formestatisticaupdate'
 import FormContratoCreate from './components/formcontratocreate'
 import FormContratoUpdate from './components/formcontratoupdate'
+
 import { Routes, Route } from "react-router-dom"
 
 function App() {
@@ -37,6 +41,9 @@ function App() {
         <Route path="/contratos/criar" element={<FormContratoCreate />} />
         <Route path="/contratos/editar/:id" element={<FormContratoUpdate />} />
 
+        <Route path="/nacionalidades" element={<Nacionalidades />} />
+        <Route path="/nacionalidades/criar" element={<FormNacionalidadeCreate />} />
+        <Route path="/nacionalidades/editar/:id" element={<FormNacionalidadeUpdate />} />
       </Routes>
     </div>
   )
