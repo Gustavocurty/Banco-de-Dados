@@ -65,15 +65,10 @@ export default function FormTimeUpdate() {
     setLoading(true);
 
     try {
-      const nacionalidadeSelecionada = nacionalidades.find(
-        (n) => n.id === Number(formData.nacionalidadeId)
-      );
-
       const payload = {
         name: formData.name.trim(),
-        foundation: fixDateToISO(formData.foundation), 
+        foundation: fixDateToISO(formData.foundation),
         nacionalidadeId: Number(formData.nacionalidadeId),
-        country: nacionalidadeSelecionada ? nacionalidadeSelecionada.nome : "",
       };
 
       const res = await fetch(`http://localhost:3333/team/${id}`, {

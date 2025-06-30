@@ -9,11 +9,11 @@ import "react-datepicker/dist/react-datepicker.css";
 registerLocale("ptBR", ptBR);
 
 export default function Times() {
-  const [_, setTimes] = useState([]);
+  const [times, setTimes] = useState([]);
   const [filteredTimes, setFilteredTimes] = useState([]);
   const [searchTime, setSearchTime] = useState("");
-  const [searchPais, setSearchPais] = useState("");
   const [searchFundacao, setSearchFundacao] = useState("");
+  const [searchNacionalidade, setSearchNacionalidade] = useState("");
 
   const fetchTimes = async (queryParams = "") => {
     try {
@@ -33,12 +33,12 @@ export default function Times() {
   useEffect(() => {
     const params = new URLSearchParams();
     if (searchTime.trim() !== "") params.append("q", searchTime);
-    if (searchPais.trim() !== "") params.append("country", searchPais);
     if (searchFundacao.trim() !== "") params.append("foundation", searchFundacao);
+    if (searchNacionalidade.trim() !== "") params.append("nacionalidade", searchNacionalidade);
 
     const query = params.toString() ? `?${params.toString()}` : "";
     fetchTimes(query);
-  }, [searchTime, searchPais, searchFundacao]);
+  }, [searchTime, searchFundacao, searchNacionalidade]);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Tem certeza que deseja excluir este time?")) return;
@@ -77,8 +77,8 @@ export default function Times() {
           <thead>
             <tr className="bg-gray-200 text-gray-700 uppercase text-sm leading-normal">
               <th className="py-3 px-6 text-center">Nome</th>
-              <th className="py-3 px-6 text-center">País</th>
               <th className="py-3 px-6 text-center">Fundação</th>
+              <th className="py-3 px-6 text-center">Nacionalidade</th>
               <th className="py-3 px-6 text-center">Ações</th>
             </tr>
             <tr className="bg-gray-200">
@@ -88,15 +88,6 @@ export default function Times() {
                   value={searchTime}
                   placeholder="Pesquisar Time 🔎"
                   onChange={(e) => setSearchTime(e.target.value)}
-                  className="bg-white border border-gray-300 rounded-lg w-full !text-black placeholder-black text-center py-1 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-                />
-              </th>
-              <th className="py-2 px-6 text-center">
-                <input
-                  type="text"
-                  value={searchPais}
-                  placeholder="Pesquisar País 🔎"
-                  onChange={(e) => setSearchPais(e.target.value)}
                   className="bg-white border border-gray-300 rounded-lg w-full !text-black placeholder-black text-center py-1 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                 />
               </th>
@@ -112,6 +103,15 @@ export default function Times() {
                   placeholderText="Data da Fundação 🔎"
                   className="bg-white border text-center border-gray-300 rounded-lg w-full min-w-[120px] !text-black placeholder-black py-1 px-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition mx-auto block"
                   isClearable
+                />
+              </th>
+              <th className="py-2 px-6 text-center">
+                <input
+                  type="text"
+                  value={searchNacionalidade}
+                  placeholder="Pesquisar Nacionalidade 🔎"
+                  onChange={(e) => setSearchNacionalidade(e.target.value)}
+                  className="bg-white border border-gray-300 rounded-lg w-full !text-black placeholder-black text-center py-1 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                 />
               </th>
               <th></th>
@@ -131,9 +131,11 @@ export default function Times() {
                   className="border-b text-black border-gray-200 hover:bg-blue-100 transition-colors duration-200"
                 >
                   <td className="py-2 px-6 text-center whitespace-nowrap font-medium">{time.name}</td>
-                  <td className="py-2 px-6 text-center whitespace-nowrap">{time.country}</td>
                   <td className="py-2 px-6 text-center whitespace-nowrap">
                     {new Date(time.foundation).toLocaleDateString("pt-BR")}
+                  </td>
+                  <td className="py-2 px-6 text-center whitespace-nowrap">
+                    {time.nacionalidade?.nome || "Não informada"}
                   </td>
                   <td className="py-2 px-6 text-right whitespace-nowrap flex gap-2 justify-end">
                     <button
