@@ -4,9 +4,13 @@ import { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 export const teamController: FastifyPluginAsyncZod = async (app) => {
   const { z } = await import("zod");
 
+  const nacionalidadeSchema = z.object({
+    id: z.number(),
+    nome: z.string(),
+  });
+
   const teamSchema = z.object({
     name: z.string(),
-    country: z.string(),
     foundation: z.string(),
     nacionalidadeId: z.number(),
   });
@@ -14,9 +18,9 @@ export const teamController: FastifyPluginAsyncZod = async (app) => {
   const teamResponseSchema = z.object({
     id: z.number(),
     name: z.string(),
-    country: z.string(),
     foundation: z.string(),
     nacionalidadeId: z.number(),
+    nacionalidade: nacionalidadeSchema,
   });
 
   const errorSchema = z.object({ error: z.string() });
@@ -27,8 +31,8 @@ export const teamController: FastifyPluginAsyncZod = async (app) => {
 
   const querySchema = z.object({
     q: z.string().optional(),
-    country: z.string().optional(),
     foundation: z.string().optional(),
+    nacionalidade: z.string().optional(), // Filtro por nome da nacionalidade
   });
 
   // CREATE
@@ -41,10 +45,11 @@ export const teamController: FastifyPluginAsyncZod = async (app) => {
       },
     },
   }, async (request, reply) => {
-    const { name, country, foundation, nacionalidadeId } = request.body;
+    const { name, foundation, nacionalidadeId } = request.body;
     try {
       const newTeam = await prisma.team.create({
-        data: { name, country, foundation, nacionalidadeId },
+        data: { name, foundation, nacionalidadeId },
+        include: { nacionalidade: true },
       });
       reply.status(201).send(newTeam);
     } catch (error) {
@@ -53,7 +58,7 @@ export const teamController: FastifyPluginAsyncZod = async (app) => {
     }
   });
 
-  // SELECT * FROM player
+  // READ ALL
   app.get("/team", {
     schema: {
       querystring: querySchema,
@@ -63,14 +68,19 @@ export const teamController: FastifyPluginAsyncZod = async (app) => {
       },
     },
   }, async (request, reply) => {
-    const { q, country, foundation } = request.query;
+    const { q, foundation, nacionalidade } = request.query;
     try {
       const teams = await prisma.team.findMany({
         where: {
           ...(q && { name: { contains: q } }),
-          ...(country && { country: { contains: country } }),
           ...(foundation && { foundation: { contains: foundation } }),
+          ...(nacionalidade && {
+            nacionalidade: {
+              nome: { contains: nacionalidade },
+            },
+          }),
         },
+        include: { nacionalidade: true },
         orderBy: { name: "asc" },
       });
       reply.send(teams);
@@ -80,7 +90,7 @@ export const teamController: FastifyPluginAsyncZod = async (app) => {
     }
   });
 
-  // SELECT * FROM player WHERE id = ?
+  // READ BY ID
   app.get("/team/:id", {
     schema: {
       params: idParamSchema,
@@ -93,7 +103,10 @@ export const teamController: FastifyPluginAsyncZod = async (app) => {
   }, async (request, reply) => {
     const { id } = request.params;
     try {
-      const team = await prisma.team.findUnique({ where: { id } });
+      const team = await prisma.team.findUnique({
+        where: { id },
+        include: { nacionalidade: true },
+      });
       if (!team) return reply.status(404).send({ error: "Time não encontrado." });
       reply.send(team);
     } catch (error) {
@@ -102,7 +115,7 @@ export const teamController: FastifyPluginAsyncZod = async (app) => {
     }
   });
 
-  // UPDATE - where id
+  // UPDATE
   app.put("/team/:id", {
     schema: {
       params: idParamSchema,
@@ -115,7 +128,7 @@ export const teamController: FastifyPluginAsyncZod = async (app) => {
     },
   }, async (request, reply) => {
     const { id } = request.params;
-    const { name, country, foundation, nacionalidadeId } = request.body;
+    const { name, foundation, nacionalidadeId } = request.body;
     try {
       const existente = await prisma.team.findUnique({ where: { id } });
       if (!existente) {
@@ -123,7 +136,8 @@ export const teamController: FastifyPluginAsyncZod = async (app) => {
       }
       const updatedTeam = await prisma.team.update({
         where: { id },
-        data: { name, country, foundation, nacionalidadeId },
+        data: { name, foundation, nacionalidadeId },
+        include: { nacionalidade: true },
       });
       reply.status(200).send(updatedTeam);
     } catch (error) {
