@@ -9,7 +9,7 @@ import "react-datepicker/dist/react-datepicker.css";
 registerLocale("ptBR", ptBR);
 
 export default function Times() {
-  const [times, setTimes] = useState([]);
+  const [_, setTimes] = useState([]);
   const [filteredTimes, setFilteredTimes] = useState([]);
   const [searchTime, setSearchTime] = useState("");
   const [searchPais, setSearchPais] = useState("");

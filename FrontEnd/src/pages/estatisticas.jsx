@@ -211,8 +211,8 @@ export default function Estatisticas() {
                   value={searchMatches}
                   onChange={(e) => setSearchMatches(e.target.value)}
                   placeholder="Partidas 🔎"
-                  className="bg-white border border-gray-300 rounded-lg text-black text-center py-1 px-2 placeholder-black focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-                  style={{ width: "80px", boxSizing: "border-box" }}
+                  className="bg-white border border-gray-300 rounded-lg w-full text-black text-center py-1 px-2 placeholder-black focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                  style={{ width: "120px", boxSizing: "border-box" }}
                 />
               </th>
               <th className="py-2 px-6 text-center">
@@ -223,7 +223,7 @@ export default function Estatisticas() {
                   onChange={(e) => setSearchGoals(e.target.value)}
                   placeholder="Gols 🔎"
                   className="bg-white border border-gray-300 rounded-lg text-black text-center py-1 px-2 placeholder-black focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-                  style={{ width: "80px", boxSizing: "border-box" }}
+                  style={{ width: "90px", boxSizing: "border-box" }}
                 />
               </th>
               <th className="py-2 px-6 text-center">
@@ -234,7 +234,7 @@ export default function Estatisticas() {
                   onChange={(e) => setSearchAssists(e.target.value)}
                   placeholder="Assistências 🔎"
                   className="bg-white border border-gray-300 rounded-lg text-black text-center py-1 px-2 placeholder-black focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-                  style={{ width: "80px", boxSizing: "border-box" }}
+                  style={{ width: "150px", boxSizing: "border-box" }}
                 />
               </th>
               <th></th>

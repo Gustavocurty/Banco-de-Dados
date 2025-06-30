@@ -20,8 +20,8 @@ import { Routes, Route } from "react-router-dom"
 
 function App() {
   return (
-    <div className="flex flex-col min-h-screen bg-white items-center">
-      <Nav />
+    <div className="flex flex-col min-h-screen bg-white items-center pt-[64px]">
+      <Nav/>
       <Routes>
         <Route path="/" element={<Home />} />
 
